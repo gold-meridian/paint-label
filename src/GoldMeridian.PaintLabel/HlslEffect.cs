@@ -3,6 +3,7 @@
 public readonly record struct HlslEffect(
     HlslEffectParameter[] Parameters,
     HlslEffectTechnique[] Techniques,
+    HlslEffectObject[] Objects,
     HlslError[] Errors
 )
 {

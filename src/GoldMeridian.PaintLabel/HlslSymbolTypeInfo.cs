@@ -22,6 +22,7 @@ public enum HlslSymbolType
     Texture2D,
     Texture3D,
     TextureCube,
+    Sampler,
     Sampler1D,
     Sampler2D,
     Sampler3D,
@@ -41,9 +42,8 @@ public readonly record struct HlslSymbolStructMember(
 public readonly record struct HlslSymbolTypeInfo(
     HlslSymbolClass ParameterClass,
     HlslSymbolType ParameterType,
-    int Rows,
-    int Columns,
-    int Elements,
-    int MemberCount,
+    uint Rows,
+    uint Columns,
+    uint Elements,
     HlslSymbolStructMember[] Members
 );

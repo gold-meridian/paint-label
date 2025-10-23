@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace GoldMeridian.PaintLabel;
 
 public readonly record struct HlslEffectValue(
-    string Name,
-    string Semantic,
+    string? Name,
+    string? Semantic,
     HlslSymbolTypeInfo Type,
     HlslEffectValue.ValuesUnion Values
 )
@@ -392,6 +392,26 @@ public readonly record struct HlslEffectValue(
 
             return array is not null;
         }
+
+        public bool TryGetBoolArray(
+            [NotNullWhen(returnValue: true)] out bool[]? array
+        )
+        {
+            if (Kind != ValuesKind.BoolArray)
+            {
+                array = null;
+                return false;
+            }
+
+            Debug.Assert(this is BoolArrayValues);
+
+            array = (this as BoolArrayValues)?.RealValues;
+            {
+                Debug.Assert(array is not null);
+            }
+
+            return array is not null;
+        }
     }
 
     public sealed record IntArrayValues(
@@ -470,6 +490,10 @@ public readonly record struct HlslEffectValue(
         HlslEffectSamplerState[] RealValues
     ) : ValuesUnion(ValuesKind.EffectSamplerStateArray, RealValues);
 
+    public sealed record BoolArrayValues(
+        bool[] RealValues
+    ) : ValuesUnion(ValuesKind.BoolArray, RealValues);
+
     public enum ValuesKind : byte
     {
         IntArray,
@@ -491,6 +515,9 @@ public readonly record struct HlslEffectValue(
         TextureAddressArray,
         TextureFilterTypeArray,
         EffectSamplerStateArray,
+
+        // Added for convenience
+        BoolArray,
     }
 #endregion
 }

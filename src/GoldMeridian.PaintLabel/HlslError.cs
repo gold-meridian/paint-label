@@ -37,7 +37,14 @@ public enum HlslErrorPosition : sbyte
 public readonly record struct HlslErrorLocation(
     HlslErrorPosition PositionKind,
     int Position
-);
+)
+{
+    public static readonly HlslErrorLocation NONE = new(HlslErrorPosition.None, 0);
+
+    public static readonly HlslErrorLocation BEFORE = new(HlslErrorPosition.Before, 0);
+
+    public static readonly HlslErrorLocation AFTER = new(HlslErrorPosition.After, 0);
+}
 
 public readonly record struct HlslError(
     string? Message,
