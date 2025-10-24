@@ -166,7 +166,7 @@ public sealed class EffectReader(BinaryReader reader)
     {
         using (KeepPos())
         {
-            Position = baseOffset + (int)typeOffset;
+            SeekFromOffset(typeOffset);
 
             var type = reader.ReadUInt32();
             var valueClass = reader.ReadUInt32();
@@ -193,7 +193,7 @@ public sealed class EffectReader(BinaryReader reader)
                 var columnCount = reader.ReadUInt32();
                 var rowCount = reader.ReadUInt32();
 
-                Position = baseOffset + (int)valueOffset;
+                SeekFromOffset(valueOffset);
 
                 var valueCount = columnCount * rowCount;
                 if (elementCount > 0)
@@ -257,7 +257,7 @@ public sealed class EffectReader(BinaryReader reader)
             {
                 Debug.Assert(parameterType is >= HlslSymbolType.String and <= HlslSymbolType.VertexShader);
 
-                Position = baseOffset + (int)valueOffset;
+                SeekFromOffset(valueOffset);
 
                 if (
                     parameterType is HlslSymbolType.Sampler
@@ -452,7 +452,7 @@ public sealed class EffectReader(BinaryReader reader)
 
         using (KeepPos())
         {
-            Position = baseOffset + (int)pos;
+            SeekFromOffset(pos);
 
             var length = reader.ReadUInt32();
             return ReadString(length);
