@@ -58,13 +58,13 @@ public sealed class Shader : BaseShader<ShaderOpcode>
         }
         else if (opcode.Type == ShaderOpcode.Def)
         {
-            opcode.Destination = DestinationParameter.Read(reader, Version);
+            opcode.Destination = DestinationParameter.Read(reader);
             opcode.Constants = [reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()];
         }
         else if (opcode.Type == ShaderOpcode.Dcl)
         {
             opcode.Extra = reader.ReadUInt32();
-            opcode.Destination = DestinationParameter.Read(reader, Version);
+            opcode.Destination = DestinationParameter.Read(reader);
         }
         else
         {
@@ -72,7 +72,7 @@ public sealed class Shader : BaseShader<ShaderOpcode>
 
             if (opcode.Length > i && !OpcodeTypeInfo.Opcodes[opcode.Type].NoDest)
             {
-                opcode.Destination = DestinationParameter.Read(reader, Version);
+                opcode.Destination = DestinationParameter.Read(reader);
                 i++;
             }
 
@@ -82,7 +82,7 @@ public sealed class Shader : BaseShader<ShaderOpcode>
                 opcode.Sources = new SourceParameter[opcode.Length - i];
                 for (; i < opcode.Length; i++)
                 {
-                    opcode.Sources[i - start] = SourceParameter.Read(reader, Version);
+                    opcode.Sources[i - start] = SourceParameter.Read(reader);
                 }
             }
         }
