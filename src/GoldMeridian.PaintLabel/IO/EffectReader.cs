@@ -136,7 +136,25 @@ public sealed class EffectReader(BinaryReader reader)
         }
     }
 
-    private void ReadTechniques(HlslEffectTechnique[] parameters, HlslEffectObject[] objects) { }
+    private void ReadTechniques(HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    {
+        for (var i = 0; i < techniques.Length; i++)
+        {
+            var nameOffset = reader.ReadUInt32();
+            var annotations = new HlslEffectAnnotation[reader.ReadUInt32()];
+            var passes = new HlslEffectPass[reader.ReadUInt32()];
+
+            var name = ReadStringAtPosition(nameOffset);
+            ReadAnnotations(annotations, objects);
+            ReadPasses(passes, objects);
+
+            techniques[i] = new HlslEffectTechnique(
+                name,
+                passes,
+                annotations
+            );
+        }
+    }
 
     private void ReadAnnotations(HlslEffectAnnotation[] annotations, HlslEffectObject[] objects)
     {
@@ -154,6 +172,45 @@ public sealed class EffectReader(BinaryReader reader)
 
             annotations[i] = new HlslEffectAnnotation(
                 Value: effectValue
+            );
+        }
+    }
+
+    private void ReadPasses(HlslEffectPass[] passes, HlslEffectObject[] objects)
+    {
+        for (var i = 0; i < passes.Length; i++)
+        {
+            var nameOffset = reader.ReadUInt32();
+            var annotations = new HlslEffectAnnotation[reader.ReadUInt32()];
+            var states = new HlslEffectState[reader.ReadUInt32()];
+
+            var name = ReadStringAtPosition(nameOffset);
+            ReadAnnotations(annotations, objects);
+            ReadStates(states, objects);
+
+            passes[i] = new HlslEffectPass(
+                name,
+                states,
+                annotations
+            );
+        }
+    }
+
+    private void ReadStates(HlslEffectState[] states, HlslEffectObject[] objects)
+    {
+        for (var i = 0; i < states.Length; i++)
+        {
+            var type = reader.ReadUInt32();
+            _ = reader.ReadUInt32(); // FIXME
+            var typeOffset = reader.ReadUInt32();
+            var valueOffset = reader.ReadUInt32();
+
+            var stateType = (HlslRenderStateType)type;
+            var effect = ReadValue(typeOffset, valueOffset, objects);
+
+            states[i] = new HlslEffectState(
+                stateType,
+                effect
             );
         }
     }
@@ -399,7 +456,7 @@ public sealed class EffectReader(BinaryReader reader)
                 }
 
                 var dstOffset = 0;
-                float[] values = new float[valueCount];
+                var values = new float[valueCount];
                 var ii = 0;
                 do
                 {

@@ -120,13 +120,13 @@ public readonly record struct HlslEffectState(
 );
 
 public readonly record struct HlslEffectPass(
-    string Name,
+    string? Name,
     HlslEffectState[] States,
     HlslEffectAnnotation[] Annotations
 );
 
 public readonly record struct HlslEffectTechnique(
-    string Name,
-    HlslEffectPass Passes,
+    string? Name,
+    HlslEffectPass[] Passes,
     HlslEffectAnnotation[] Annotations
 );
