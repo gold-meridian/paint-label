@@ -41,21 +41,21 @@ public sealed class EffectReader
 
     public int Position
     {
-        get => (int)reader.BaseStream.Position;
-        set => reader.BaseStream.Position = value;
+        get => (int)Reader.BaseStream.Position;
+        set => Reader.BaseStream.Position = value;
     }
 
     // Length left to read, not length of the entire buffer.  Yes.  I know.
-    public int Length => (int)reader.BaseStream.Length - Position;
+    public int Length => (int)Reader.BaseStream.Length - Position;
+
+    public BinaryReader Reader { get; }
 
     private int baseOffset;
     private List<HlslError> errors = [];
 
-    private readonly BinaryReader reader;
-
     private EffectReader(BinaryReader reader)
     {
-        this.reader = reader;
+        Reader = reader;
     }
 
     public static HlslEffect ReadEffect(BinaryReader reader)
@@ -76,7 +76,7 @@ public sealed class EffectReader
         {
             // The XNA4-provided Effect compiler adds extra data we need to
             // skip.
-            var skip = reader.ReadUInt32() - 8;
+            var skip = Reader.ReadUInt32() - 8;
             Position += (int)skip;
 
             ReadVersionToken(out magic, out major, out minor);
@@ -87,7 +87,7 @@ public sealed class EffectReader
             return error_not_an_effect;
         }
 
-        var offset = reader.ReadUInt32();
+        var offset = Reader.ReadUInt32();
         baseOffset = Position;
         if (offset > Length)
         {
@@ -101,10 +101,10 @@ public sealed class EffectReader
             return error_unexpected_eof;
         }
 
-        var parameters = new HlslEffectParameter[reader.ReadUInt32()];
-        var techniques = new HlslEffectTechnique[reader.ReadUInt32()];
-        _ = reader.ReadUInt32(); // FIXME: what is this?
-        var objects = new HlslEffectObject[reader.ReadUInt32()];
+        var parameters = new HlslEffectParameter[Reader.ReadUInt32()];
+        var techniques = new HlslEffectTechnique[Reader.ReadUInt32()];
+        _ = Reader.ReadUInt32(); // FIXME: what is this?
+        var objects = new HlslEffectObject[Reader.ReadUInt32()];
         for (var i = 0; i < objects.Length; i++)
         {
             objects[i] = new HlslEffectObject(HlslSymbolType.Void, null);
@@ -118,8 +118,8 @@ public sealed class EffectReader
             return error_unexpected_eof;
         }
 
-        var smallObjectCount = reader.ReadUInt32();
-        var largeObjectCount = reader.ReadUInt32();
+        var smallObjectCount = Reader.ReadUInt32();
+        var largeObjectCount = Reader.ReadUInt32();
 
         ReadSmallObjects(smallObjectCount, parameters, techniques, objects);
         ReadLargeObjects(smallObjectCount, largeObjectCount, parameters, techniques, objects);
@@ -134,7 +134,7 @@ public sealed class EffectReader
 
     private void ReadVersionToken(out ushort magic, out byte versionMajor, out byte versionMinor)
     {
-        var token = reader.ReadUInt32();
+        var token = Reader.ReadUInt32();
 
         magic = (ushort)((token >> 16) & 0xFFFF);
         versionMajor = (byte)((token >> 8) & 0xFF);
@@ -145,10 +145,10 @@ public sealed class EffectReader
     {
         for (var i = 0; i < parameters.Length; i++)
         {
-            var typeOffset = reader.ReadUInt32();
-            var valueOffset = reader.ReadUInt32();
-            _ = reader.ReadUInt32(); // flags
-            var annotations = new HlslEffectAnnotation[reader.ReadUInt32()];
+            var typeOffset = Reader.ReadUInt32();
+            var valueOffset = Reader.ReadUInt32();
+            _ = Reader.ReadUInt32(); // flags
+            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
 
             ReadAnnotations(annotations, objects);
             var effectValue = ReadValue(typeOffset, valueOffset, objects);
@@ -164,9 +164,9 @@ public sealed class EffectReader
     {
         for (var i = 0; i < techniques.Length; i++)
         {
-            var nameOffset = reader.ReadUInt32();
-            var annotations = new HlslEffectAnnotation[reader.ReadUInt32()];
-            var passes = new HlslEffectPass[reader.ReadUInt32()];
+            var nameOffset = Reader.ReadUInt32();
+            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
+            var passes = new HlslEffectPass[Reader.ReadUInt32()];
 
             var name = ReadStringAtPosition(nameOffset);
             ReadAnnotations(annotations, objects);
@@ -189,8 +189,8 @@ public sealed class EffectReader
 
         for (var i = 0; i < annotations.Length; i++)
         {
-            var typeOffset = reader.ReadUInt32();
-            var valueOffset = reader.ReadUInt32();
+            var typeOffset = Reader.ReadUInt32();
+            var valueOffset = Reader.ReadUInt32();
 
             var effectValue = ReadValue(typeOffset, valueOffset, objects);
 
@@ -204,9 +204,9 @@ public sealed class EffectReader
     {
         for (var i = 0; i < passes.Length; i++)
         {
-            var nameOffset = reader.ReadUInt32();
-            var annotations = new HlslEffectAnnotation[reader.ReadUInt32()];
-            var states = new HlslEffectState[reader.ReadUInt32()];
+            var nameOffset = Reader.ReadUInt32();
+            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
+            var states = new HlslEffectState[Reader.ReadUInt32()];
 
             var name = ReadStringAtPosition(nameOffset);
             ReadAnnotations(annotations, objects);
@@ -224,10 +224,10 @@ public sealed class EffectReader
     {
         for (var i = 0; i < states.Length; i++)
         {
-            var type = reader.ReadUInt32();
-            _ = reader.ReadUInt32(); // FIXME
-            var typeOffset = reader.ReadUInt32();
-            var valueOffset = reader.ReadUInt32();
+            var type = Reader.ReadUInt32();
+            _ = Reader.ReadUInt32(); // FIXME
+            var typeOffset = Reader.ReadUInt32();
+            var valueOffset = Reader.ReadUInt32();
 
             var stateType = (HlslRenderStateType)type;
             var effect = ReadValue(typeOffset, valueOffset, objects);
@@ -248,8 +248,8 @@ public sealed class EffectReader
 
         for (var i = 1; i < smallObjectCount + 1; i++)
         {
-            var index = reader.ReadUInt32();
-            var length = reader.ReadUInt32();
+            var index = Reader.ReadUInt32();
+            var length = Reader.ReadUInt32();
 
             var obj = objects[index];
             if (obj.Type is HlslSymbolType.String)
@@ -315,12 +315,12 @@ public sealed class EffectReader
         var objectCount = smallObjectCount + largeObjectCount + 1;
         for (var i = smallObjectCount + 1; i < objectCount; i++)
         {
-            var technique = reader.ReadInt32();
-            var index = reader.ReadUInt32();
-            _ = reader.ReadUInt32(); // FIXME
-            var state = reader.ReadUInt32();
-            var type = reader.ReadUInt32();
-            var length = reader.ReadUInt32();
+            var technique = Reader.ReadInt32();
+            var index = Reader.ReadUInt32();
+            _ = Reader.ReadUInt32(); // FIXME
+            var state = Reader.ReadUInt32();
+            var type = Reader.ReadUInt32();
+            var length = Reader.ReadUInt32();
 
             uint objectIndex;
             if (technique == -1)
@@ -409,11 +409,11 @@ public sealed class EffectReader
         {
             SeekFromOffset(typeOffset);
 
-            var type = reader.ReadUInt32();
-            var valueClass = reader.ReadUInt32();
-            var nameOffset = reader.ReadUInt32();
-            var semanticOffset = reader.ReadUInt32();
-            var elementCount = reader.ReadUInt32();
+            var type = Reader.ReadUInt32();
+            var valueClass = Reader.ReadUInt32();
+            var nameOffset = Reader.ReadUInt32();
+            var semanticOffset = Reader.ReadUInt32();
+            var elementCount = Reader.ReadUInt32();
 
             var parameterType = (HlslSymbolType)type;
             var parameterClass = (HlslSymbolClass)valueClass;
@@ -431,8 +431,8 @@ public sealed class EffectReader
             {
                 Debug.Assert(parameterType is >= HlslSymbolType.Bool and <= HlslSymbolType.Float);
 
-                var columnCount = reader.ReadUInt32();
-                var rowCount = reader.ReadUInt32();
+                var columnCount = Reader.ReadUInt32();
+                var rowCount = Reader.ReadUInt32();
 
                 SeekFromOffset(valueOffset);
 
@@ -449,7 +449,7 @@ public sealed class EffectReader
                         var ints = new int[valueCount];
                         for (var i = 0; i < ints.Length; i++)
                         {
-                            ints[i] = reader.ReadInt32();
+                            ints[i] = Reader.ReadInt32();
                         }
 
                         values = ValuesUnion.FromArray(ints);
@@ -459,7 +459,7 @@ public sealed class EffectReader
                         var floats = new float[valueCount];
                         for (var i = 0; i < floats.Length; i++)
                         {
-                            floats[i] = reader.ReadSingle();
+                            floats[i] = Reader.ReadSingle();
                         }
 
                         values = ValuesUnion.FromArray(floats);
@@ -469,7 +469,7 @@ public sealed class EffectReader
                         var booleans = new bool[valueCount];
                         for (var i = 0; i < booleans.Length; i++)
                         {
-                            booleans[i] = reader.ReadBoolean();
+                            booleans[i] = Reader.ReadBoolean();
                         }
 
                         values = ValuesUnion.FromArray(booleans);
@@ -508,13 +508,13 @@ public sealed class EffectReader
                                   or HlslSymbolType.SamplerCube
                 )
                 {
-                    var states = new HlslEffectSamplerState[reader.ReadUInt32()];
+                    var states = new HlslEffectSamplerState[Reader.ReadUInt32()];
                     for (var i = 0; i < states.Length; i++)
                     {
-                        var samplerType = (HlslSamplerStateType)(reader.ReadUInt32() & ~0xA0);
-                        _ = reader.ReadUInt32(); // FIXME
-                        var stateTypeOffset = reader.ReadUInt32();
-                        var stateValueOffset = reader.ReadUInt32();
+                        var samplerType = (HlslSamplerStateType)(Reader.ReadUInt32() & ~0xA0);
+                        _ = Reader.ReadUInt32(); // FIXME
+                        var stateTypeOffset = Reader.ReadUInt32();
+                        var stateValueOffset = Reader.ReadUInt32();
 
                         var stateValue = ReadValue(stateTypeOffset, stateValueOffset, objects);
 
@@ -560,7 +560,7 @@ public sealed class EffectReader
                     var ints = new int[objectCount];
                     for (var i = 0; i < ints.Length; i++)
                     {
-                        ints[i] = reader.ReadInt32();
+                        ints[i] = Reader.ReadInt32();
                     }
 
                     var values = ValuesUnion.FromArray(ints);
@@ -588,22 +588,22 @@ public sealed class EffectReader
 
             if (parameterClass is HlslSymbolClass.Struct)
             {
-                var members = new HlslSymbolStructMember[reader.ReadUInt32()];
+                var members = new HlslSymbolStructMember[Reader.ReadUInt32()];
 
                 var structSize = 0u;
                 for (var i = 0; i < members.Length; i++)
                 {
-                    var memberParameterType = (HlslSymbolType)reader.ReadUInt32();
-                    var memberParameterClass = (HlslSymbolClass)reader.ReadUInt32();
+                    var memberParameterType = (HlslSymbolType)Reader.ReadUInt32();
+                    var memberParameterClass = (HlslSymbolClass)Reader.ReadUInt32();
 
-                    var memberNameOffset = reader.ReadUInt32();
-                    _ = reader.ReadUInt32(); // memberSemanticOffset
+                    var memberNameOffset = Reader.ReadUInt32();
+                    _ = Reader.ReadUInt32(); // memberSemanticOffset
 
                     var memberName = ReadStringAtPosition(memberNameOffset);
 
-                    var memberElementCount = reader.ReadUInt32();
-                    var memberColumnCount = reader.ReadUInt32();
-                    var memberRowCount = reader.ReadUInt32();
+                    var memberElementCount = Reader.ReadUInt32();
+                    var memberColumnCount = Reader.ReadUInt32();
+                    var memberRowCount = Reader.ReadUInt32();
 
                     // TODO: nested structs
                     Debug.Assert(memberParameterClass is >= HlslSymbolClass.Scalar and <= HlslSymbolClass.MatrixColumns);
@@ -651,7 +651,7 @@ public sealed class EffectReader
 
                         for (var k = 0; k < amountToRead; k++)
                         {
-                            var buf = reader.ReadBytes((int)sizeToRead);
+                            var buf = Reader.ReadBytes((int)sizeToRead);
                             Buffer.BlockCopy(buf, 0, values, dstOffset, (int)sizeToRead);
                             dstOffset += 4;
                         }
@@ -680,13 +680,13 @@ public sealed class EffectReader
 
     private string? ReadStringAndOffset()
     {
-        var strPtr = reader.ReadUInt32();
+        var strPtr = Reader.ReadUInt32();
         return ReadStringAtPosition(strPtr);
     }
 
     private string? ReadStringAtPosition(uint pos)
     {
-        if (pos == 0 || baseOffset + pos >= reader.BaseStream.Length)
+        if (pos == 0 || baseOffset + pos >= Reader.BaseStream.Length)
         {
             return null;
         }
@@ -695,7 +695,7 @@ public sealed class EffectReader
         {
             SeekFromOffset(pos);
 
-            var length = reader.ReadUInt32();
+            var length = Reader.ReadUInt32();
             return ReadString(length);
         }
     }
@@ -707,7 +707,7 @@ public sealed class EffectReader
             return null;
         }
 
-        var bytes = reader.ReadBytes((int)length - 1);
+        var bytes = Reader.ReadBytes((int)length - 1);
         return Encoding.ASCII.GetString(bytes);
     }
 

@@ -85,6 +85,9 @@ public enum ShaderOpcode
     SetP,
     TexLdl,
     BreakP,
+
+    Comment = 0xFFFE,
+    End = 0xFFFF,
 }
 
 public enum PreshaderOpcode
@@ -126,4 +129,7 @@ public enum PreshaderOpcode
     DivScalar,
     DotScalar,
     NoiseScalar,
+
+    Comment = 0xFFFE,
+    End = 0xFFFF,
 }
