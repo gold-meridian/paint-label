@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 
 namespace GoldMeridian.PaintLabel;
 
@@ -37,7 +36,6 @@ public sealed class ValuesUnion
     // god-awful manner possible.  would love to just bitcast and return an
     // ienumrable<T> or what-have-you, but this is what we're dealing with.
     public unsafe bool TryGetArray<T>([NotNullWhen(returnValue: true)] out T[]? array)
-        where T : unmanaged
     {
         if (typeof(T) == typeof(HlslEffectSamplerState))
         {
@@ -45,6 +43,7 @@ public sealed class ValuesUnion
             return true;
         }
 
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
         if (sizeof(T) == sizeof(int))
         {
             if (fourByteArray is null)
@@ -68,6 +67,7 @@ public sealed class ValuesUnion
             array = Reinterpret<byte, T>(oneByteArray);
             return true;
         }
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
         Debug.Fail("TryGetArray with wrong size: " + typeof(T).Name);
         array = null;

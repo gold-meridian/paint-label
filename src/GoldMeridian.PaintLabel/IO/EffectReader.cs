@@ -91,6 +91,10 @@ public sealed class EffectReader(BinaryReader reader)
         var techniques = new HlslEffectTechnique[reader.ReadUInt32()];
         _ = reader.ReadUInt32(); // FIXME: what is this?
         var objects = new HlslEffectObject[reader.ReadUInt32()];
+        for (var i = 0; i < objects.Length; i++)
+        {
+            objects[i] = new HlslEffectObject(HlslSymbolType.Void, null);
+        }
 
         ReadParameters(parameters, objects);
         ReadTechniques(techniques, objects);
@@ -99,6 +103,12 @@ public sealed class EffectReader(BinaryReader reader)
         {
             return error_unexpected_eof;
         }
+
+        var smallObjectCount = reader.ReadUInt32();
+        var largeObjectCount = reader.ReadUInt32();
+
+        ReadSmallObjects(smallObjectCount, parameters, techniques, objects);
+        ReadLargeObjects(smallObjectCount, largeObjectCount, parameters, techniques, objects);
 
         return new HlslEffect(
             Parameters: parameters,
@@ -212,6 +222,144 @@ public sealed class EffectReader(BinaryReader reader)
                 stateType,
                 effect
             );
+        }
+    }
+
+    private void ReadSmallObjects(uint smallObjectCount, HlslEffectParameter[] parameters, HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    {
+        if (smallObjectCount == 0)
+        {
+            return;
+        }
+
+        for (var i = 1; i < smallObjectCount + 1; i++)
+        {
+            var index = reader.ReadUInt32();
+            var length = reader.ReadUInt32();
+
+            var obj = objects[index];
+            if (obj.Type is HlslSymbolType.String)
+            {
+                using (KeepPos())
+                {
+                    if (length > 0)
+                    {
+                        var value = ReadString(length);
+                        obj.Value = new HlslEffectString(value);
+                    }
+                }
+            }
+            else if (
+                obj.Type is HlslSymbolType.Texture
+                         or HlslSymbolType.Texture1D
+                         or HlslSymbolType.Texture2D
+                         or HlslSymbolType.Texture3D
+                         or HlslSymbolType.TextureCube
+                         or HlslSymbolType.Sampler
+                         or HlslSymbolType.Sampler1D
+                         or HlslSymbolType.Sampler2D
+                         or HlslSymbolType.Sampler3D
+                         or HlslSymbolType.SamplerCube
+            )
+            {
+                using (KeepPos())
+                {
+                    if (length > 0)
+                    {
+                        var name = ReadString(length);
+                        obj.Value = new HlslEffectSamplerMap(name);
+                    }
+                }
+            }
+            else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+            {
+                // TODO
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unknown small object type: {obj.Type}");
+            }
+
+            var blockLength = length + 3 - (length - 1) % 4;
+            Position += (int)blockLength;
+        }
+    }
+
+    private void ReadLargeObjects(uint smallObjectCount, uint largeObjectCount, HlslEffectParameter[] parameters, HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    {
+        if (largeObjectCount == 0)
+        {
+            return;
+        }
+
+        var objectCount = smallObjectCount + largeObjectCount + 1;
+        for (var i = smallObjectCount + 1; i < objectCount; i++)
+        {
+            var technique = reader.ReadInt32();
+            var index = reader.ReadUInt32();
+            _ = reader.ReadUInt32(); // FIXME
+            var state = reader.ReadUInt32();
+            var type = reader.ReadUInt32();
+            var length = reader.ReadUInt32();
+
+            uint objectIndex;
+            if (technique == -1)
+            {
+                var values = parameters[index].Value.Values;
+                if (!values.TryGetArray<HlslEffectSamplerState>(out var samplerStates))
+                {
+                    throw new InvalidOperationException($"No HlslEffectSamplerState[] for LO {i} index {index} (technique: {technique}, state: {state})");
+                }
+
+                if (!samplerStates[state].Value.Values.TryGetArray<int>(out var ints))
+                {
+                    throw new InvalidOperationException($"No int[] for HlslEffectSamplerState in LO {i} index {index} (technique: {technique}, state: {state})");
+                }
+
+                objectIndex = (uint)ints[0];
+            }
+            else
+            {
+                var values = techniques[technique].Passes[index].States[state].Value.Values;
+                if (!values.TryGetArray<int>(out var ints))
+                {
+                    throw new InvalidOperationException($"No int[] for LO {i} index {index} (technique: {technique})");
+                }
+
+                objectIndex = (uint)ints[0];
+            }
+
+            var obj = objects[objectIndex];
+            if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+            {
+                // TODO
+            }
+            else if (
+                obj.Type is HlslSymbolType.Texture
+                         or HlslSymbolType.Texture1D
+                         or HlslSymbolType.Texture2D
+                         or HlslSymbolType.Texture3D
+                         or HlslSymbolType.TextureCube
+                         or HlslSymbolType.Sampler
+                         or HlslSymbolType.Sampler1D
+                         or HlslSymbolType.Sampler2D
+                         or HlslSymbolType.Sampler3D
+                         or HlslSymbolType.SamplerCube
+            )
+            {
+                if (length > 0)
+                {
+                    var name = ReadString(length);
+                    obj.Value = new HlslEffectSamplerMap(name);
+                }
+            }
+            else if (obj.Type is not HlslSymbolType.Void) // TODO: why?
+            {
+                throw new InvalidOperationException($"Unknown large object type: {obj.Type}");
+            }
+
+            var blockLength = length + 3 - (length - 1) % 4;
+            Position += (int)blockLength;
         }
     }
 
@@ -523,7 +671,9 @@ public sealed class EffectReader(BinaryReader reader)
             return null;
         }
 
-        return Encoding.ASCII.GetString(reader.ReadBytes((int)length - 1));
+        var bytes = reader.ReadBytes((int)length - 1);
+        //Position++; // skip null terminator
+        return Encoding.ASCII.GetString(bytes);
     }
 
     private IDisposable KeepPos()
