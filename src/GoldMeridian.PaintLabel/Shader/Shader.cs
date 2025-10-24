@@ -2,9 +2,9 @@
 
 namespace GoldMeridian.PaintLabel.Shader;
 
-public class HlslShader
+public class Shader
 {
-    public static HlslShader? ReadShader(EffectReader reader)
+    public static Shader? ReadShader(EffectReader reader)
     {
         return null;
     }

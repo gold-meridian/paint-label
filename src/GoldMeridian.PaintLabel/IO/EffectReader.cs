@@ -287,7 +287,7 @@ public sealed class EffectReader
             }
             else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
             {
-                var shader = HlslShader.ReadShader(this);
+                var shader = Shader.Shader.ReadShader(this);
                 if (shader is null)
                 {
                     return;
@@ -361,7 +361,7 @@ public sealed class EffectReader
                 }
                 else
                 {
-                    var shader = HlslShader.ReadShader(this);
+                    var shader = Shader.Shader.ReadShader(this);
                     if (shader is null)
                     {
                         return;

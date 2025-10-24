@@ -169,3 +169,13 @@ public enum HlslTextureFilterType
     GaussianQuad,
     ConvolutionMono,
 }
+
+//
+
+public enum HlslSymbolRegisterSet
+{
+    Bool,
+    Int4,
+    Float4,
+    Sampler,
+}

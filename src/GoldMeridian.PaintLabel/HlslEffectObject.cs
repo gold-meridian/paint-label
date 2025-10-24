@@ -6,7 +6,7 @@ namespace GoldMeridian.PaintLabel;
 public abstract record HlslEffectObjectValue;
 
 public sealed record HlslEffectShader(
-    HlslShader Value
+    Shader.Shader Value
 ) : HlslEffectObjectValue;
 
 public sealed record HlslEffectSamplerMap(
