@@ -250,10 +250,10 @@ public sealed class EffectReader
             var index = Reader.ReadUInt32();
             var length = Reader.ReadUInt32();
 
-            var obj = objects[index];
-            if (obj.Type is HlslSymbolType.String)
+            using (KeepPos())
             {
-                using (KeepPos())
+                var obj = objects[index];
+                if (obj.Type is HlslSymbolType.String)
                 {
                     if (length > 0)
                     {
@@ -261,21 +261,18 @@ public sealed class EffectReader
                         obj.Value = new HlslEffectString(value);
                     }
                 }
-            }
-            else if (
-                obj.Type is HlslSymbolType.Texture
-                         or HlslSymbolType.Texture1D
-                         or HlslSymbolType.Texture2D
-                         or HlslSymbolType.Texture3D
-                         or HlslSymbolType.TextureCube
-                         or HlslSymbolType.Sampler
-                         or HlslSymbolType.Sampler1D
-                         or HlslSymbolType.Sampler2D
-                         or HlslSymbolType.Sampler3D
-                         or HlslSymbolType.SamplerCube
-            )
-            {
-                using (KeepPos())
+                else if (
+                    obj.Type is HlslSymbolType.Texture
+                             or HlslSymbolType.Texture1D
+                             or HlslSymbolType.Texture2D
+                             or HlslSymbolType.Texture3D
+                             or HlslSymbolType.TextureCube
+                             or HlslSymbolType.Sampler
+                             or HlslSymbolType.Sampler1D
+                             or HlslSymbolType.Sampler2D
+                             or HlslSymbolType.Sampler3D
+                             or HlslSymbolType.SamplerCube
+                )
                 {
                     if (length > 0)
                     {
@@ -283,15 +280,15 @@ public sealed class EffectReader
                         obj.Value = new HlslEffectSamplerMap(name);
                     }
                 }
-            }
-            else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
-            {
-                var shader = Shader.Shader.ReadShader(Reader);
-                obj.Value = new HlslEffectShader(shader);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Unknown small object type: {obj.Type}");
+                else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+                {
+                    var shader = Shader.Shader.ReadShader(Reader);
+                    obj.Value = new HlslEffectShader(shader);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unknown small object type: {obj.Type}");
+                }
             }
 
             var blockLength = length + 3 - (length - 1) % 4;
@@ -343,44 +340,47 @@ public sealed class EffectReader
                 objectIndex = (uint)ints[0];
             }
 
-            var obj = objects[objectIndex];
-            if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+            using (KeepPos())
             {
-                if (type == 2)
+                var obj = objects[objectIndex];
+                if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
                 {
-                    // Standalone preshader, exists only for effect passes that
-                    // do not use a single vertex/fragment shader.
+                    if (type == 2)
+                    {
+                        // Standalone preshader, exists only for effect passes that
+                        // do not use a single vertex/fragment shader.
 
-                    throw new NotImplementedException();
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        var shader = Shader.Shader.ReadShader(Reader);
+                        obj.Value = new HlslEffectShader(shader);
+                    }
                 }
-                else
+                else if (
+                    obj.Type is HlslSymbolType.Texture
+                             or HlslSymbolType.Texture1D
+                             or HlslSymbolType.Texture2D
+                             or HlslSymbolType.Texture3D
+                             or HlslSymbolType.TextureCube
+                             or HlslSymbolType.Sampler
+                             or HlslSymbolType.Sampler1D
+                             or HlslSymbolType.Sampler2D
+                             or HlslSymbolType.Sampler3D
+                             or HlslSymbolType.SamplerCube
+                )
                 {
-                    var shader = Shader.Shader.ReadShader(Reader);
-                    obj.Value = new HlslEffectShader(shader);
+                    if (length > 0)
+                    {
+                        var name = ReadString(length);
+                        obj.Value = new HlslEffectSamplerMap(name);
+                    }
                 }
-            }
-            else if (
-                obj.Type is HlslSymbolType.Texture
-                         or HlslSymbolType.Texture1D
-                         or HlslSymbolType.Texture2D
-                         or HlslSymbolType.Texture3D
-                         or HlslSymbolType.TextureCube
-                         or HlslSymbolType.Sampler
-                         or HlslSymbolType.Sampler1D
-                         or HlslSymbolType.Sampler2D
-                         or HlslSymbolType.Sampler3D
-                         or HlslSymbolType.SamplerCube
-            )
-            {
-                if (length > 0)
+                else if (obj.Type is not HlslSymbolType.Void) // TODO: why?
                 {
-                    var name = ReadString(length);
-                    obj.Value = new HlslEffectSamplerMap(name);
+                    throw new InvalidOperationException($"Unknown large object type: {obj.Type}");
                 }
-            }
-            else if (obj.Type is not HlslSymbolType.Void) // TODO: why?
-            {
-                throw new InvalidOperationException($"Unknown large object type: {obj.Type}");
             }
 
             var blockLength = length + 3 - (length - 1) % 4;

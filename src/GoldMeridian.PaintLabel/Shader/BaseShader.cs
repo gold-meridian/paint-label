@@ -97,7 +97,7 @@ public abstract class BaseShader<TKind>
         {
             reader.BaseStream.Position = start + constantsInfo + i * 20;
 
-            var constant = new Constant()
+            var constant = new Constant
             {
                 Name = ReadString(reader, start, length),
                 RegSet = (HlslSymbolRegisterSet)reader.ReadUInt16(),
