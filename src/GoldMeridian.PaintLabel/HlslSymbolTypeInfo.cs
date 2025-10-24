@@ -35,7 +35,7 @@ public enum HlslSymbolType
 }
 
 public readonly record struct HlslSymbolStructMember(
-    string Name,
+    string? Name,
     HlslSymbolTypeInfo Info
 );
 

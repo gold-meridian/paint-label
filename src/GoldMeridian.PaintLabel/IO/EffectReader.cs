@@ -196,7 +196,7 @@ public sealed class EffectReader(BinaryReader reader)
                     valueCount *= elementCount;
                 }
 
-                HlslEffectValue.ValuesUnion values;
+                ValuesUnion values;
                 switch (parameterType)
                 {
                     case HlslSymbolType.Int:
@@ -206,7 +206,7 @@ public sealed class EffectReader(BinaryReader reader)
                             ints[i] = reader.ReadInt32();
                         }
 
-                        values = new HlslEffectValue.IntArrayValues(ints);
+                        values = ValuesUnion.FromArray(ints);
                         break;
 
                     case HlslSymbolType.Float:
@@ -216,7 +216,7 @@ public sealed class EffectReader(BinaryReader reader)
                             floats[i] = reader.ReadSingle();
                         }
 
-                        values = new HlslEffectValue.FloatArrayValues(floats);
+                        values = ValuesUnion.FromArray(floats);
                         break;
 
                     case HlslSymbolType.Bool:
@@ -226,7 +226,7 @@ public sealed class EffectReader(BinaryReader reader)
                             booleans[i] = reader.ReadBoolean();
                         }
 
-                        values = new HlslEffectValue.BoolArrayValues(booleans);
+                        values = ValuesUnion.FromArray(booleans);
                         break;
 
                     default:
@@ -279,7 +279,7 @@ public sealed class EffectReader(BinaryReader reader)
 
                         if (samplerType == HlslSamplerStateType.Texture)
                         {
-                            if (!stateValue.Values.TryGetIntArray(out var ints))
+                            if (!stateValue.Values.TryGetArray<int>(out var ints))
                             {
                                 throw new InvalidOperationException("Sampler type was Texture but values was not int[]");
                             }
@@ -299,7 +299,7 @@ public sealed class EffectReader(BinaryReader reader)
                             elementCount,
                             []
                         ),
-                        new HlslEffectValue.EffectSamplerStateArrayValues(states)
+                        ValuesUnion.FromArray(states)
                     );
                 }
 
@@ -317,13 +317,13 @@ public sealed class EffectReader(BinaryReader reader)
                         ints[i] = reader.ReadInt32();
                     }
 
-                    var values = new HlslEffectValue.IntArrayValues(ints);
+                    var values = ValuesUnion.FromArray(ints);
 
                     for (var i = 0; i < objectCount; i++)
                     {
                         objects[ints[i]].Type = parameterType;
                     }
-                    
+
                     return new HlslEffectValue(
                         name,
                         semantic,
@@ -347,19 +347,85 @@ public sealed class EffectReader(BinaryReader reader)
                 var structSize = 0u;
                 for (var i = 0; i < members.Length; i++)
                 {
-                    
+                    var memberParameterType = (HlslSymbolType)reader.ReadUInt32();
+                    var memberParameterClass = (HlslSymbolClass)reader.ReadUInt32();
+
+                    var memberNameOffset = reader.ReadUInt32();
+                    _ = reader.ReadUInt32(); // memberSemanticOffset
+
+                    var memberName = ReadStringAtPosition(memberNameOffset);
+
+                    var memberElementCount = reader.ReadUInt32();
+                    var memberColumnCount = reader.ReadUInt32();
+                    var memberRowCount = reader.ReadUInt32();
+
+                    // TODO: nested structs
+                    Debug.Assert(memberParameterClass is >= HlslSymbolClass.Scalar and <= HlslSymbolClass.MatrixColumns);
+                    Debug.Assert(memberParameterType is >= HlslSymbolType.Bool and <= HlslSymbolType.Float);
+
+                    var memSize = 4 * memberRowCount;
+                    if (memberElementCount > 0)
+                    {
+                        memSize *= memberElementCount;
+                    }
+
+                    structSize += memSize;
+
+                    members[i] = new HlslSymbolStructMember(
+                        memberName,
+                        new HlslSymbolTypeInfo(
+                            memberParameterClass,
+                            memberParameterType,
+                            memberRowCount,
+                            memberColumnCount,
+                            memberElementCount,
+                            []
+                        )
+                    );
                 }
 
                 var columnCount = structSize;
-                var rowCount = 1;
-                
+                const int row_count = 1;
+
                 var valueCount = structSize;
                 if (elementCount > 0)
                 {
                     valueCount *= elementCount;
                 }
-                
-                
+
+                var dstOffset = 0;
+                float[] values = new float[valueCount];
+                var ii = 0;
+                do
+                {
+                    foreach (var member in members)
+                    {
+                        var amountToRead = member.Info.Rows * member.Info.Elements;
+                        var sizeToRead = member.Info.Columns << 2;
+
+                        for (var k = 0; k < amountToRead; k++)
+                        {
+                            var buf = reader.ReadBytes((int)sizeToRead);
+                            Buffer.BlockCopy(buf, 0, values, dstOffset, (int)sizeToRead);
+                            dstOffset += 4;
+                        }
+                    }
+                }
+                while (++ii < elementCount);
+
+                return new HlslEffectValue(
+                    name,
+                    semantic,
+                    new HlslSymbolTypeInfo(
+                        parameterClass,
+                        parameterType,
+                        row_count,
+                        columnCount,
+                        elementCount,
+                        members
+                    ),
+                    ValuesUnion.FromArray(values)
+                );
             }
 
             throw new InvalidOperationException($"Somehow unhandled parameter class: {parameterClass}");

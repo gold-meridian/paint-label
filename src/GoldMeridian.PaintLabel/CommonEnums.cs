@@ -1,27 +1,27 @@
 ﻿namespace GoldMeridian.PaintLabel;
 
-public enum HlslZBufferType : byte
+public enum HlslZBufferType
 {
     False,
     True,
     UseW,
 }
 
-public enum HlslFillMode : byte
+public enum HlslFillMode
 {
     Point = 1,
     Wireframe = 2,
     Solid = 3,
 }
 
-public enum HlslShadeMode : byte
+public enum HlslShadeMode
 {
     Flat = 1,
     Gouraund = 2,
     Phong = 3,
 }
 
-public enum HlslBlendMode : byte
+public enum HlslBlendMode
 {
     Zero = 1,
     One = 2,
@@ -41,14 +41,14 @@ public enum HlslBlendMode : byte
     InvSrcColor2 = 17,
 }
 
-public enum HlslCullMode : byte
+public enum HlslCullMode
 {
     None = 1,
     Cw = 2,
     Ccw = 3,
 }
 
-public enum HlslCompareFunc : byte
+public enum HlslCompareFunc
 {
     Never = 1,
     Less = 2,
@@ -60,7 +60,7 @@ public enum HlslCompareFunc : byte
     Always = 8,
 }
 
-public enum HlslFogMode : byte
+public enum HlslFogMode
 {
     None,
     Exp,
@@ -68,7 +68,7 @@ public enum HlslFogMode : byte
     Linear,
 }
 
-public enum HlslStencilOp : byte
+public enum HlslStencilOp
 {
     Keep = 1,
     Zero = 2,
@@ -80,14 +80,14 @@ public enum HlslStencilOp : byte
     Decr = 8,
 }
 
-public enum HlslMaterialColorSource : byte
+public enum HlslMaterialColorSource
 {
     Material,
     Color1,
     Color2,
 }
 
-public enum HlslVertexBlendFlags : ushort
+public enum HlslVertexBlendFlags
 {
     Disable = 0,
     OneWeights = 1,
@@ -97,19 +97,19 @@ public enum HlslVertexBlendFlags : ushort
     ZeroWeights = 256,
 }
 
-public enum HlslPatchedEdgeStyle : byte
+public enum HlslPatchedEdgeStyle
 {
     Discrete,
     Continuous,
 }
 
-public enum HlslDebugMonitorTokens : byte
+public enum HlslDebugMonitorTokens
 {
     Enable,
     Disable,
 }
 
-public enum HlslBlendOp : byte
+public enum HlslBlendOp
 {
     Add = 1,
     Subtract = 2,
@@ -118,7 +118,7 @@ public enum HlslBlendOp : byte
     Max = 5,
 }
 
-public enum HlslDegreeType : byte
+public enum HlslDegreeType
 {
     Linear = 1,
     Quadratic = 2,
@@ -128,7 +128,7 @@ public enum HlslDegreeType : byte
 
 //
 
-public enum HlslSamplerStateType : byte
+public enum HlslSamplerStateType
 {
     Unknown0 = 0,
     Unknown1 = 1,
@@ -150,7 +150,7 @@ public enum HlslSamplerStateType : byte
     DmapOffset = 17,
 }
 
-public enum HlslTextureAddress : byte
+public enum HlslTextureAddress
 {
     Wrap = 1,
     Mirror = 2,
@@ -159,7 +159,7 @@ public enum HlslTextureAddress : byte
     MirrorOnce = 5,
 }
 
-public enum HlslTextureFilterType : byte
+public enum HlslTextureFilterType
 {
     None,
     Point,
