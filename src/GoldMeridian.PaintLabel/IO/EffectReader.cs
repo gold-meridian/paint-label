@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using GoldMeridian.PaintLabel.Shader;
 
 namespace GoldMeridian.PaintLabel.IO;
 

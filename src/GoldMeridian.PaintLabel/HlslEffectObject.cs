@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using GoldMeridian.PaintLabel.Shader;
 
 namespace GoldMeridian.PaintLabel;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using GoldMeridian.PaintLabel.IO;
 
 namespace GoldMeridian.PaintLabel.Shader;
 
@@ -13,14 +12,12 @@ public enum ShaderType : ushort
     Preshader = 0x4658,
 }
 
-public struct ShaderVersion
+public readonly record struct ShaderVersion(
+    ShaderType Type,
+    uint Major,
+    uint Minor
+)
 {
-    public ShaderType Type { get; set; }
-
-    public uint Major { get; set; }
-
-    public uint Minor { get; set; }
-
     public static ShaderVersion Read(BinaryReader reader)
     {
         var token = reader.ReadUInt32();
@@ -34,7 +31,7 @@ public struct ShaderVersion
 
         var minor = token & 0xFF;
         var major = (token & 0xFF00) >> 8;
-        
+
         var version = new ShaderVersion
         {
             Type = type,

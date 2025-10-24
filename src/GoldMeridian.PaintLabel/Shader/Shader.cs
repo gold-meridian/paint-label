@@ -1,35 +1,41 @@
 ﻿using System.IO;
 using System.Text;
-using GoldMeridian.PaintLabel.IO;
 
 namespace GoldMeridian.PaintLabel.Shader;
 
 public sealed class Shader : BaseShader<ShaderOpcode>
 {
-    private const uint header_ctab = 'C' | 'T' << 8 | 'A' << 16 | 'B' << 24;
     private const uint header_pres = 'P' | 'R' << 8 | 'E' << 16 | 'S' << 24;
 
     public Preshader? Preshader { get; set; }
 
-    public string? Creator { get; private set; }
-
-    public string? Target { get; private set; }
-
-    public static Shader ReadShader(EffectReader reader)
+    public static Shader ReadShader(BinaryReader reader)
     {
         var shader = new Shader
         {
-            Version = ShaderVersion.Read(reader.Reader),
+            Version = ShaderVersion.Read(reader),
         };
 
-        while (shader.ReadOpcode(reader.Reader)) { }
+        while (shader.ReadOpcode(reader)) { }
 
         return shader;
     }
 
     protected override bool ProcessSpecialComments(BinaryReader reader, uint length)
     {
-        throw new System.NotImplementedException();
+        var header = reader.ReadUInt32();
+        switch (header)
+        {
+            case HEADER_CTAB:
+                ReadConstantTable(reader, length - 4);
+                return true;
+            
+            case header_pres:
+                Preshader = Preshader.ReadPreshader(reader);
+                return true;
+        }
+
+        return false;
     }
     
     protected override OpcodeData<ShaderOpcode> MakeRegularToken(BinaryReader reader, uint tokenType, uint length)

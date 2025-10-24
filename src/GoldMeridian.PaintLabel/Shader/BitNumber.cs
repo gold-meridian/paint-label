@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace GoldMeridian.PaintLabel.Shader;
+﻿namespace GoldMeridian.PaintLabel.Shader;
 
 public readonly record struct BitNumber(uint Value)
 {
