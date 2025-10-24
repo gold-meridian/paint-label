@@ -18,7 +18,7 @@ internal static class Program
         {
             using var fs = File.OpenRead(path);
             using var r = new BinaryReader(fs);
-            var effect = new EffectReader(r).ReadEffect();
+            var effect = EffectReader.ReadEffect(r);
             anyErrors |= effect.HasErrors;
         }
 

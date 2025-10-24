@@ -8,7 +8,7 @@ namespace GoldMeridian.PaintLabel.IO;
 
 // TODO: hide this object and just expose static methods for reading
 
-public sealed class EffectReader(BinaryReader reader)
+public sealed class EffectReader
 {
     private readonly struct DisposeAction(Action action) : IDisposable
     {
@@ -50,7 +50,20 @@ public sealed class EffectReader(BinaryReader reader)
     private int baseOffset;
     private List<HlslError> errors = [];
 
-    public HlslEffect ReadEffect()
+    private readonly BinaryReader reader;
+
+    private EffectReader(BinaryReader reader)
+    {
+        this.reader = reader;
+    }
+
+    public static HlslEffect ReadEffect(BinaryReader reader)
+    {
+        var effectReader = new EffectReader(reader);
+        return effectReader.ReadEffect();
+    }
+
+    private HlslEffect ReadEffect()
     {
         if (Length < 8)
         {
