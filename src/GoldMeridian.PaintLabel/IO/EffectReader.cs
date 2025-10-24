@@ -128,6 +128,11 @@ public sealed class EffectReader(BinaryReader reader)
 
             ReadAnnotations(annotations, objects);
             var effectValue = ReadValue(typeOffset, valueOffset, objects);
+
+            parameters[i] = new HlslEffectParameter(
+                Value: effectValue,
+                Annotations: annotations
+            );
         }
     }
 
