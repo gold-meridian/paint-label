@@ -24,7 +24,7 @@ public enum RegisterType
     Predicate = 19,
 
     // From ShaderDecompiler
-    /*
+
     // Assigned manually
     Texcrdout = 100,
     Texture = 101,
@@ -34,5 +34,4 @@ public enum RegisterType
     PreshaderLiteral = 200,
     PreshaderInput = 201,
     PreshaderTemp = 202,
-    */
 }
