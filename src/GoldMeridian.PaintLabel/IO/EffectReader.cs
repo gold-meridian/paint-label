@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using GoldMeridian.PaintLabel.Shader;
 
 namespace GoldMeridian.PaintLabel.IO;
 
@@ -286,7 +287,13 @@ public sealed class EffectReader
             }
             else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
             {
-                // TODO
+                var shader = HlslShader.ReadShader(this);
+                if (shader is null)
+                {
+                    return;
+                }
+
+                obj.Value = new HlslEffectShader(shader);
             }
             else
             {
@@ -345,7 +352,23 @@ public sealed class EffectReader
             var obj = objects[objectIndex];
             if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
             {
-                // TODO
+                if (type == 2)
+                {
+                    // Standalone preshader, exists only for effect passes that
+                    // do not use a single vertex/fragment shader.
+
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    var shader = HlslShader.ReadShader(this);
+                    if (shader is null)
+                    {
+                        return;
+                    }
+
+                    obj.Value = new HlslEffectShader(shader);
+                }
             }
             else if (
                 obj.Type is HlslSymbolType.Texture
@@ -685,7 +708,6 @@ public sealed class EffectReader
         }
 
         var bytes = reader.ReadBytes((int)length - 1);
-        //Position++; // skip null terminator
         return Encoding.ASCII.GetString(bytes);
     }
 

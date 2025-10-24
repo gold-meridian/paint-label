@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using GoldMeridian.PaintLabel.Shader;
 
 namespace GoldMeridian.PaintLabel;
 
 public abstract record HlslEffectObjectValue;
 
 public sealed record HlslEffectShader(
-    object Value
+    HlslShader Value
 ) : HlslEffectObjectValue;
 
 public sealed record HlslEffectSamplerMap(
