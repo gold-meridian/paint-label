@@ -27,47 +27,41 @@ public abstract class BaseShader<TKind>
 
     protected bool ReadOpcode(BinaryReader reader)
     {
-        var dontAddToken = false;
-
         var token = new BitNumber(reader.ReadUInt32());
         var tokenType = token[0, 15];
 
         OpcodeData<TKind> opcode;
-        if (tokenType == TOKEN_COMMENT)
+        switch (tokenType)
         {
-            var length = token[16, 30];
-            var commentStart = reader.BaseStream.Position;
-
-            if (ProcessSpecialComments(reader, length * 4))
+            case TOKEN_COMMENT:
             {
-                reader.BaseStream.Position = commentStart + length * 4;
+                var length = token[16, 30];
+                var commentStart = reader.BaseStream.Position;
 
-                opcode = new OpcodeData<TKind>(); // unused
-                dontAddToken = true;
-            }
-            else
-            {
+                if (ProcessSpecialComments(reader, length * 4))
+                {
+                    reader.BaseStream.Position = commentStart + length * 4;
+                    return true;
+                }
+
                 reader.BaseStream.Position = commentStart;
                 opcode = MakeComment(tokenType, length, reader.ReadBytes((int)length * 4));
+                break;
+            }
+
+            case TOKEN_END:
+                return false;
+
+            default:
+            {
+                var length = token[24, 27];
+                opcode = MakeRegularToken(reader, tokenType, length);
+                break;
             }
         }
-        else if (tokenType == TOKEN_END)
-        {
-            opcode = new OpcodeData<TKind>(); // unused
-            dontAddToken = true;
-        }
-        else
-        {
-            var length = token[24, 27];
-            opcode = MakeRegularToken(reader, tokenType, length);
-        }
 
-        if (!dontAddToken)
-        {
-            Opcodes.Add(opcode);
-        }
-
-        return tokenType != TOKEN_END;
+        Opcodes.Add(opcode);
+        return true;
     }
 
     protected void ReadConstantTable(BinaryReader reader, uint length)
@@ -149,7 +143,7 @@ public abstract class BaseShader<TKind>
             var strPos = start + position;
             var maxLength = (int)(length - position);
             var buffer = new byte[maxLength];
-            
+
             reader.BaseStream.Seek(strPos, SeekOrigin.Begin);
             var bytesRead = reader.BaseStream.Read(buffer, 0, maxLength);
 
