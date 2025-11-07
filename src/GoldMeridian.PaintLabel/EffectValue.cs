@@ -4,6 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace GoldMeridian.PaintLabel;
 
+public readonly record struct EffectSamplerState(
+    SamplerStateType Type,
+    EffectValue Value
+);
+
 public readonly record struct EffectValue(
     string? Name,
     string? Semantic,
