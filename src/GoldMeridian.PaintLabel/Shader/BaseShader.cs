@@ -136,36 +136,30 @@ public abstract class BaseShader<TKind>
     protected string? ReadString(BinaryReader reader, uint start, uint length)
     {
         var position = reader.ReadUInt32();
-
-        var streamPos = reader.BaseStream.Position;
-        position += start;
-
-        if (position >= start + length)
+        if (position >= length)
         {
             return null;
         }
 
+        var streamPos = reader.BaseStream.Position;
+
+        reader.BaseStream.Seek(position, SeekOrigin.Begin);
         try
         {
-            reader.BaseStream.Seek(position, SeekOrigin.Begin);
+            var strPos = start + position;
+            var maxLength = (int)(length - position);
+            var buffer = new byte[maxLength];
+            
+            reader.BaseStream.Seek(strPos, SeekOrigin.Begin);
+            var bytesRead = reader.BaseStream.Read(buffer, 0, maxLength);
 
-            var strLength = 0;
-            while (position + strLength < start + length)
+            var strLen = 0;
+            while (strLen < bytesRead && buffer[strLen] != 0)
             {
-                if (reader.ReadByte() == 0)
-                {
-                    reader.BaseStream.Seek(position, SeekOrigin.Begin);
-                    return Encoding.ASCII.GetString(reader.ReadBytes(strLength));
-                }
-                else if (reader.BaseStream.Position >= reader.BaseStream.Length)
-                {
-                    return null;
-                }
-
-                strLength++;
+                strLen++;
             }
 
-            return null;
+            return strLen == 0 ? string.Empty : Encoding.ASCII.GetString(buffer, 0, strLen);
         }
         finally
         {

@@ -52,38 +52,42 @@ public sealed class Shader : BaseShader<ShaderOpcode>
             return opcode;
         }
 
-        if (opcode.Type is ShaderOpcode.Call or ShaderOpcode.CallNz)
+        switch (opcode.Type)
         {
-            throw new NotImplementedException($"Unhandled opcode: \"{opcode.Type}\" (call or callnz)");
-        }
-        else if (opcode.Type == ShaderOpcode.Def)
-        {
-            opcode.Destination = DestinationParameter.Read(reader);
-            opcode.Constants = [reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()];
-        }
-        else if (opcode.Type == ShaderOpcode.Dcl)
-        {
-            opcode.Extra = reader.ReadUInt32();
-            opcode.Destination = DestinationParameter.Read(reader);
-        }
-        else
-        {
-            var i = 0;
+            case ShaderOpcode.Call or ShaderOpcode.CallNz:
+                throw new NotImplementedException($"Unhandled opcode: \"{opcode.Type}\" (call or callnz)");
 
-            if (opcode.Length > i && !OpcodeTypeInfo.Opcodes[opcode.Type].NoDest)
-            {
+            case ShaderOpcode.Def:
                 opcode.Destination = DestinationParameter.Read(reader);
-                i++;
-            }
+                opcode.Constants = [reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()];
+                break;
 
-            if (opcode.Length > i)
+            case ShaderOpcode.Dcl:
+                opcode.Extra = reader.ReadUInt32();
+                opcode.Destination = DestinationParameter.Read(reader);
+                break;
+
+            default:
             {
-                var start = i;
-                opcode.Sources = new SourceParameter[opcode.Length - i];
-                for (; i < opcode.Length; i++)
+                var i = 0;
+
+                if (opcode.Length > i && !OpcodeTypeInfo.Opcodes[opcode.Type].NoDest)
                 {
-                    opcode.Sources[i - start] = SourceParameter.Read(reader);
+                    opcode.Destination = DestinationParameter.Read(reader);
+                    i++;
                 }
+
+                if (opcode.Length > i)
+                {
+                    var start = i;
+                    opcode.Sources = new SourceParameter[opcode.Length - i];
+                    for (; i < opcode.Length; i++)
+                    {
+                        opcode.Sources[i - start] = SourceParameter.Read(reader);
+                    }
+                }
+
+                break;
             }
         }
 

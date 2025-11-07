@@ -114,7 +114,7 @@ public sealed class Preshader : BaseShader<PreshaderOpcode>
             0xA080 => PreshaderOpcode.DivScalar,
             0xD000 => PreshaderOpcode.DotScalar,
             0xD020 => PreshaderOpcode.NoiseScalar,
-            _ => throw new InvalidOperationException($"Unknown preshader opcode: {(opToken >> 16) & 0xFFFF} ({opToken})")
+            _ => throw new InvalidOperationException($"Unknown preshader opcode: {(opToken >> 16) & 0xFFFF} ({opToken})"),
         };
 
         var length = reader.ReadUInt32();
@@ -142,7 +142,7 @@ public sealed class Preshader : BaseShader<PreshaderOpcode>
                 actualRegister = operandItem;
             }
 
-            OpcodeParameter param;
+            IOpcodeParameter param;
             if (i == opcode.Length - 1)
             {
                 opcode.Destination = new DestinationParameter
@@ -161,7 +161,7 @@ public sealed class Preshader : BaseShader<PreshaderOpcode>
                     SwizzleX = swizzle,
                     SwizzleY = swizzle,
                     SwizzleZ = swizzle,
-                    SwizzleW = swizzle
+                    SwizzleW = swizzle,
                 };
                 param = opcode.Sources[i];
             }

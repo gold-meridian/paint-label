@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using GoldMeridian.PaintLabel.IO;
@@ -11,16 +12,28 @@ internal static class Program
     {
         var binaries = Directory.GetFiles(args[0], "*.fxc", SearchOption.AllDirectories);
 
-        var sw = Stopwatch.StartNew();
+        var files = new Dictionary<string, byte[]>();
         foreach (var path in binaries)
         {
-            using var fs = File.OpenRead(path);
-            using var r = new BinaryReader(fs);
-            _ = EffectReader.ReadEffect(r);
+            files[path] = File.ReadAllBytes(path);
+        }
+        
+        var sw = Stopwatch.StartNew();
+
+        const int times = 2500;
+        for (var i = 0; i < times; i++)
+        {
+            foreach (var path in binaries)
+            {
+                var bytes = files[path];
+                using var ms = new MemoryStream(bytes);
+                using var r = new BinaryReader(ms);
+                _ = EffectReader.ReadEffect(r);
+            }   
         }
 
         sw.Stop();
 
-        Console.WriteLine($"Parsed {binaries.Length} files in {sw.Elapsed:g}");
+        Console.WriteLine($"Parsed {binaries.Length} * {times} ({binaries.Length * times}) files in {sw.Elapsed:g}");
     }
 }

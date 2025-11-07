@@ -104,10 +104,8 @@ public sealed class ValuesUnion
     {
         var targetBuffer = new TTarget[source.Length];
 
-        var sourceSize = Buffer.ByteLength(source);
-
         // Should be checked ahead-of-time by the caller.
-        Debug.Assert(sourceSize == Buffer.ByteLength(targetBuffer));
+        Debug.Assert(Buffer.ByteLength(source) == Buffer.ByteLength(targetBuffer));
 
         Buffer.BlockCopy(source, 0, targetBuffer, 0, source.Length);
         return targetBuffer;

@@ -10,14 +10,6 @@ namespace GoldMeridian.PaintLabel.IO;
 
 public sealed class EffectReader
 {
-    private readonly struct DisposeAction(Action action) : IDisposable
-    {
-        public void Dispose()
-        {
-            action();
-        }
-    }
-
     public int Position
     {
         get => (int)Reader.BaseStream.Position;
@@ -228,7 +220,8 @@ public sealed class EffectReader
             var index = Reader.ReadUInt32();
             var length = Reader.ReadUInt32();
 
-            using (KeepPos())
+            var pos = PushPos();
+            try
             {
                 var obj = objects[index];
                 if (obj.Type is SymbolType.String)
@@ -267,6 +260,10 @@ public sealed class EffectReader
                 {
                     throw new InvalidOperationException($"Unknown small object type: {obj.Type}");
                 }
+            }
+            finally
+            {
+                PopPos(pos);
             }
 
             var blockLength = length + 3 - (length - 1) % 4;
@@ -318,7 +315,8 @@ public sealed class EffectReader
                 objectIndex = (uint)ints[0];
             }
 
-            using (KeepPos())
+            var pos = PushPos();
+            try
             {
                 var obj = objects[objectIndex];
                 if (obj.Type is SymbolType.PixelShader or SymbolType.VertexShader)
@@ -360,6 +358,10 @@ public sealed class EffectReader
                     throw new InvalidOperationException($"Unknown large object type: {obj.Type}");
                 }
             }
+            finally
+            {
+                PopPos(pos);
+            }
 
             var blockLength = length + 3 - (length - 1) % 4;
             Position += (int)blockLength;
@@ -372,7 +374,8 @@ public sealed class EffectReader
         EffectObject[] objects
     )
     {
-        using (KeepPos())
+        var pos = PushPos();
+        try
         {
             SeekFromOffset(typeOffset);
 
@@ -643,6 +646,10 @@ public sealed class EffectReader
 
             throw new InvalidOperationException($"Somehow unhandled parameter class: {parameterClass}");
         }
+        finally
+        {
+            PopPos(pos);
+        }
     }
 
     private string? ReadStringAndOffset()
@@ -651,19 +658,24 @@ public sealed class EffectReader
         return ReadStringAtPosition(strPtr);
     }
 
-    private string? ReadStringAtPosition(uint pos)
+    private string? ReadStringAtPosition(uint position)
     {
-        if (pos == 0 || baseOffset + pos >= Reader.BaseStream.Length)
+        if (position == 0 || baseOffset + position >= Reader.BaseStream.Length)
         {
             return null;
         }
 
-        using (KeepPos())
+        var pos = PushPos();
+        try
         {
-            SeekFromOffset(pos);
+            SeekFromOffset(position);
 
             var length = Reader.ReadUInt32();
             return ReadString(length);
+        }
+        finally
+        {
+            PopPos(pos);
         }
     }
 
@@ -678,15 +690,14 @@ public sealed class EffectReader
         return Encoding.ASCII.GetString(bytes);
     }
 
-    private IDisposable KeepPos()
+    private int PushPos()
     {
-        var currentPos = Position;
-        return new DisposeAction(
-            () =>
-            {
-                Position = currentPos;
-            }
-        );
+        return Position;
+    }
+
+    private void PopPos(int position)
+    {
+        Position = position;
     }
 
     private void SeekFromOffset(uint fromOffset)
