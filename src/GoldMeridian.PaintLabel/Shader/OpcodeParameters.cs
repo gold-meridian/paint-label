@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace GoldMeridian.PaintLabel.Shader;
+namespace GoldMeridian.PaintLabel;
 
 public abstract class OpcodeParameter
 {

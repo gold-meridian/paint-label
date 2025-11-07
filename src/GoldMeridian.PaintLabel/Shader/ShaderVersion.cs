@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace GoldMeridian.PaintLabel.Shader;
+namespace GoldMeridian.PaintLabel;
 
 public enum ShaderType : ushort
 {

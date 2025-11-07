@@ -1,4 +1,4 @@
-﻿namespace GoldMeridian.PaintLabel.Shader;
+﻿namespace GoldMeridian.PaintLabel;
 
 public readonly record struct BitNumber(uint Value)
 {

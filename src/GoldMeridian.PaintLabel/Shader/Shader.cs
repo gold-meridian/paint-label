@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace GoldMeridian.PaintLabel.Shader;
+namespace GoldMeridian.PaintLabel;
 
 public sealed class Shader : BaseShader<ShaderOpcode>
 {

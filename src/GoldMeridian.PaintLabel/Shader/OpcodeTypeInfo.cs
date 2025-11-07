@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GoldMeridian.PaintLabel.Shader;
+namespace GoldMeridian.PaintLabel;
 
 public static class OpcodeTypeInfo
 {

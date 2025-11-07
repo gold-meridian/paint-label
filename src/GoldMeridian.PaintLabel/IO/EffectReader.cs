@@ -282,7 +282,7 @@ public sealed class EffectReader
                 }
                 else if (obj.Type is SymbolType.PixelShader or SymbolType.VertexShader)
                 {
-                    var shader = Shader.Shader.ReadShader(Reader);
+                    var shader = Shader.ReadShader(Reader);
                     obj.Value = new EffectShader(shader);
                 }
                 else
@@ -354,7 +354,7 @@ public sealed class EffectReader
                     }
                     else
                     {
-                        var shader = Shader.Shader.ReadShader(Reader);
+                        var shader = Shader.ReadShader(Reader);
                         obj.Value = new EffectShader(shader);
                     }
                 }

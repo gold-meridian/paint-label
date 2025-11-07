@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GoldMeridian.PaintLabel.Shader;
+namespace GoldMeridian.PaintLabel;
 
 public sealed class OpcodeData<TKind>
     where TKind : struct, Enum

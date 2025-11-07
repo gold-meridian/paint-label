@@ -5,7 +5,7 @@ namespace GoldMeridian.PaintLabel;
 public abstract record EffectObjectValue;
 
 public sealed record EffectShader(
-    Shader.Shader Value
+    Shader Value
 ) : EffectObjectValue;
 
 public sealed record EffectSamplerMap(
