@@ -4,10 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace GoldMeridian.PaintLabel;
 
-public readonly record struct HlslEffectValue(
+public readonly record struct EffectValue(
     string? Name,
     string? Semantic,
-    HlslSymbolTypeInfo Type,
+    SymbolTypeInfo Type,
     ValuesUnion Values
 );
 
@@ -15,7 +15,7 @@ public sealed class ValuesUnion
 {
     private byte[]? oneByteArray;
     private int[]? fourByteArray;
-    private HlslEffectSamplerState[]? samplerStateArray;
+    private EffectSamplerState[]? samplerStateArray;
 
     public ValuesUnion(byte[] array)
     {
@@ -27,7 +27,7 @@ public sealed class ValuesUnion
         fourByteArray = array;
     }
 
-    public ValuesUnion(HlslEffectSamplerState[] array)
+    public ValuesUnion(EffectSamplerState[] array)
     {
         samplerStateArray = array;
     }
@@ -37,7 +37,7 @@ public sealed class ValuesUnion
     // ienumrable<T> or what-have-you, but this is what we're dealing with.
     public unsafe bool TryGetArray<T>([NotNullWhen(returnValue: true)] out T[]? array)
     {
-        if (typeof(T) == typeof(HlslEffectSamplerState))
+        if (typeof(T) == typeof(EffectSamplerState))
         {
             array = (samplerStateArray as T[])!;
             return true;
@@ -74,7 +74,7 @@ public sealed class ValuesUnion
         return false;
     }
 
-    public static ValuesUnion FromArray(HlslEffectSamplerState[] array)
+    public static ValuesUnion FromArray(EffectSamplerState[] array)
     {
         return new ValuesUnion(array);
     }

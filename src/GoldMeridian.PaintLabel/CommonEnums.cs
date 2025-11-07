@@ -1,27 +1,27 @@
 ﻿namespace GoldMeridian.PaintLabel;
 
-public enum HlslZBufferType
+public enum ZBufferType
 {
     False,
     True,
     UseW,
 }
 
-public enum HlslFillMode
+public enum FillMode
 {
     Point = 1,
     Wireframe = 2,
     Solid = 3,
 }
 
-public enum HlslShadeMode
+public enum ShadeMode
 {
     Flat = 1,
     Gouraund = 2,
     Phong = 3,
 }
 
-public enum HlslBlendMode
+public enum BlendMode
 {
     Zero = 1,
     One = 2,
@@ -41,14 +41,14 @@ public enum HlslBlendMode
     InvSrcColor2 = 17,
 }
 
-public enum HlslCullMode
+public enum CullMode
 {
     None = 1,
     Cw = 2,
     Ccw = 3,
 }
 
-public enum HlslCompareFunc
+public enum CompareFunc
 {
     Never = 1,
     Less = 2,
@@ -60,7 +60,7 @@ public enum HlslCompareFunc
     Always = 8,
 }
 
-public enum HlslFogMode
+public enum FogMode
 {
     None,
     Exp,
@@ -68,7 +68,7 @@ public enum HlslFogMode
     Linear,
 }
 
-public enum HlslStencilOp
+public enum StencilOp
 {
     Keep = 1,
     Zero = 2,
@@ -80,14 +80,14 @@ public enum HlslStencilOp
     Decr = 8,
 }
 
-public enum HlslMaterialColorSource
+public enum MaterialColorSource
 {
     Material,
     Color1,
     Color2,
 }
 
-public enum HlslVertexBlendFlags
+public enum VertexBlendFlags
 {
     Disable = 0,
     OneWeights = 1,
@@ -97,19 +97,19 @@ public enum HlslVertexBlendFlags
     ZeroWeights = 256,
 }
 
-public enum HlslPatchedEdgeStyle
+public enum PatchedEdgeStyle
 {
     Discrete,
     Continuous,
 }
 
-public enum HlslDebugMonitorTokens
+public enum DebugMonitorTokens
 {
     Enable,
     Disable,
 }
 
-public enum HlslBlendOp
+public enum BlendOp
 {
     Add = 1,
     Subtract = 2,
@@ -118,7 +118,7 @@ public enum HlslBlendOp
     Max = 5,
 }
 
-public enum HlslDegreeType
+public enum DegreeType
 {
     Linear = 1,
     Quadratic = 2,
@@ -128,7 +128,7 @@ public enum HlslDegreeType
 
 //
 
-public enum HlslSamplerStateType
+public enum SamplerStateType
 {
     Unknown0 = 0,
     Unknown1 = 1,
@@ -150,7 +150,7 @@ public enum HlslSamplerStateType
     DmapOffset = 17,
 }
 
-public enum HlslTextureAddress
+public enum TextureAddress
 {
     Wrap = 1,
     Mirror = 2,
@@ -159,7 +159,7 @@ public enum HlslTextureAddress
     MirrorOnce = 5,
 }
 
-public enum HlslTextureFilterType
+public enum TextureFilterType
 {
     None,
     Point,
@@ -172,7 +172,7 @@ public enum HlslTextureFilterType
 
 //
 
-public enum HlslSymbolRegisterSet
+public enum SymbolRegisterSet
 {
     Bool,
     Int4,

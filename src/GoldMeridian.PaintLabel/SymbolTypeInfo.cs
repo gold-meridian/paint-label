@@ -2,7 +2,7 @@
 
 namespace GoldMeridian.PaintLabel;
 
-public enum HlslSymbolClass
+public enum SymbolClass
 {
     Scalar,
     Vector,
@@ -12,7 +12,7 @@ public enum HlslSymbolClass
     Struct,
 }
 
-public enum HlslSymbolType
+public enum SymbolType
 {
     Void,
     Bool,
@@ -36,45 +36,45 @@ public enum HlslSymbolType
     Unsupported,
 }
 
-public readonly record struct HlslSymbolStructMember(
+public readonly record struct SymbolStructMember(
     string? Name,
-    HlslSymbolTypeInfo Info
+    SymbolTypeInfo Info
 );
 
-public readonly record struct HlslSymbolTypeInfo(
-    HlslSymbolClass ParameterClass,
-    HlslSymbolType ParameterType,
+public readonly record struct SymbolTypeInfo(
+    SymbolClass ParameterClass,
+    SymbolType ParameterType,
     uint Rows,
     uint Columns,
     uint Elements,
-    HlslSymbolStructMember[] Members
+    SymbolStructMember[] Members
 )
 {
     public uint GetSize(out uint actualSize)
     {
         switch (ParameterClass)
         {
-            case HlslSymbolClass.Scalar:
+            case SymbolClass.Scalar:
                 actualSize = 1;
                 return 1;
 
-            case HlslSymbolClass.Vector:
+            case SymbolClass.Vector:
                 actualSize = Columns;
                 return Columns;
 
-            case HlslSymbolClass.MatrixRows:
+            case SymbolClass.MatrixRows:
                 actualSize = Rows * Columns;
                 return 4 * Rows;
 
-            case HlslSymbolClass.MatrixColumns:
+            case SymbolClass.MatrixColumns:
                 actualSize = Rows * Columns;
                 return 4 * Columns;
 
-            case HlslSymbolClass.Object:
+            case SymbolClass.Object:
                 actualSize = 0;
                 return 0;
 
-            case HlslSymbolClass.Struct:
+            case SymbolClass.Struct:
                 var size = 0u;
                 actualSize = 0;
 
@@ -97,16 +97,16 @@ public readonly record struct HlslSymbolTypeInfo(
 
         switch (ParameterClass)
         {
-            case HlslSymbolClass.Scalar:
+            case SymbolClass.Scalar:
                 arrayPos = 0;
                 return dataPos == 0;
 
-            case HlslSymbolClass.Vector:
+            case SymbolClass.Vector:
                 arrayPos = dataPos;
                 return dataPos < Columns;
 
-            case HlslSymbolClass.MatrixRows:
-            case HlslSymbolClass.MatrixColumns:
+            case SymbolClass.MatrixRows:
+            case SymbolClass.MatrixColumns:
                 var row = dataPos % 4;
                 if (row >= Rows)
                 {
@@ -122,10 +122,10 @@ public readonly record struct HlslSymbolTypeInfo(
                 arrayPos = row * Columns + col;
                 return true;
 
-            case HlslSymbolClass.Object:
+            case SymbolClass.Object:
                 return false;
 
-            case HlslSymbolClass.Struct:
+            case SymbolClass.Struct:
                 var posOffset = 0u;
                 var actualOffset = 0u;
 

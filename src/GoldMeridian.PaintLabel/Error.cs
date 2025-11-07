@@ -1,9 +1,9 @@
 ﻿namespace GoldMeridian.PaintLabel;
 
 /// <summary>
-///     The special-case positions of errors in <see cref="HlslError"/>.
+///     The special-case positions of errors in <see cref="Error"/>.
 /// </summary>
-public enum HlslErrorPosition : sbyte
+public enum ErrorPosition : sbyte
 {
     /// <summary>
     ///     There is no error.
@@ -32,22 +32,22 @@ public enum HlslErrorPosition : sbyte
 /// <param name="PositionKind">The kind of position.</param>
 /// <param name="Position">
 ///     The byte offset in a bytecode file if <see cref="PositionKind"/> is
-///     <see cref="HlslErrorPosition.ByteOffset"/>.
+///     <see cref="ErrorPosition.ByteOffset"/>.
 /// </param>
-public readonly record struct HlslErrorLocation(
-    HlslErrorPosition PositionKind,
+public readonly record struct ErrorLocation(
+    ErrorPosition PositionKind,
     int Position
 )
 {
-    public static readonly HlslErrorLocation NONE = new(HlslErrorPosition.None, 0);
+    public static readonly ErrorLocation NONE = new(ErrorPosition.None, 0);
 
-    public static readonly HlslErrorLocation BEFORE = new(HlslErrorPosition.Before, 0);
+    public static readonly ErrorLocation BEFORE = new(ErrorPosition.Before, 0);
 
-    public static readonly HlslErrorLocation AFTER = new(HlslErrorPosition.After, 0);
+    public static readonly ErrorLocation AFTER = new(ErrorPosition.After, 0);
 }
 
-public readonly record struct HlslError(
+public readonly record struct Error(
     string? Message,
     string? FileName,
-    HlslErrorLocation Location
+    ErrorLocation Location
 );

@@ -2,7 +2,7 @@
 
 // Not in order according to D3D.  Uses mojoshader's reordered data:
 // - all the Wrap values are in a row, not separate.
-public enum HlslRenderStateType
+public enum RenderStateType
 {
     ZEnable,
     FillMode,
@@ -114,19 +114,19 @@ public enum HlslRenderStateType
     PixelShader = 147,
 }
 
-public readonly record struct HlslEffectState(
-    HlslRenderStateType Type,
-    HlslEffectValue Value
+public readonly record struct EffectState(
+    RenderStateType Type,
+    EffectValue Value
 );
 
-public readonly record struct HlslEffectPass(
+public readonly record struct EffectPass(
     string? Name,
-    HlslEffectState[] States,
-    HlslEffectAnnotation[] Annotations
+    EffectState[] States,
+    EffectAnnotation[] Annotations
 );
 
-public readonly record struct HlslEffectTechnique(
+public readonly record struct EffectTechnique(
     string? Name,
-    HlslEffectPass[] Passes,
-    HlslEffectAnnotation[] Annotations
+    EffectPass[] Passes,
+    EffectAnnotation[] Annotations
 );

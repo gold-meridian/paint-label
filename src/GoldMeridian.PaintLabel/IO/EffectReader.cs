@@ -18,23 +18,23 @@ public sealed class EffectReader
         }
     }
 
-    private static readonly HlslEffect error_unexpected_eof = new(
+    private static readonly Effect error_unexpected_eof = new(
         Parameters: [],
         Techniques: [],
         Objects: [],
         Errors:
         [
-            new HlslError("Unexpected EOF", null, HlslErrorLocation.NONE),
+            new Error("Unexpected EOF", null, ErrorLocation.NONE),
         ]
     );
 
-    private static readonly HlslEffect error_not_an_effect = new(
+    private static readonly Effect error_not_an_effect = new(
         Parameters: [],
         Techniques: [],
         Objects: [],
         Errors:
         [
-            new HlslError("Not an Effects Framework binary", null, HlslErrorLocation.NONE),
+            new Error("Not an Effects Framework binary", null, ErrorLocation.NONE),
         ]
     );
 
@@ -50,20 +50,20 @@ public sealed class EffectReader
     public BinaryReader Reader { get; }
 
     private int baseOffset;
-    private List<HlslError> errors = [];
+    private List<Error> errors = [];
 
     private EffectReader(BinaryReader reader)
     {
         Reader = reader;
     }
 
-    public static HlslEffect ReadEffect(BinaryReader reader)
+    public static Effect ReadEffect(BinaryReader reader)
     {
         var effectReader = new EffectReader(reader);
         return effectReader.ReadEffect();
     }
 
-    private HlslEffect ReadEffect()
+    private Effect ReadEffect()
     {
         if (Length < 8)
         {
@@ -100,13 +100,13 @@ public sealed class EffectReader
             return error_unexpected_eof;
         }
 
-        var parameters = new HlslEffectParameter[Reader.ReadUInt32()];
-        var techniques = new HlslEffectTechnique[Reader.ReadUInt32()];
+        var parameters = new EffectParameter[Reader.ReadUInt32()];
+        var techniques = new EffectTechnique[Reader.ReadUInt32()];
         _ = Reader.ReadUInt32(); // FIXME: what is this?
-        var objects = new HlslEffectObject[Reader.ReadUInt32()];
+        var objects = new EffectObject[Reader.ReadUInt32()];
         for (var i = 0; i < objects.Length; i++)
         {
-            objects[i] = new HlslEffectObject(HlslSymbolType.Void, null);
+            objects[i] = new EffectObject(SymbolType.Void, null);
         }
 
         ReadParameters(parameters, objects);
@@ -123,7 +123,7 @@ public sealed class EffectReader
         ReadSmallObjects(smallObjectCount, parameters, techniques, objects);
         ReadLargeObjects(smallObjectCount, largeObjectCount, parameters, techniques, objects);
 
-        return new HlslEffect(
+        return new Effect(
             Parameters: parameters,
             Techniques: techniques,
             Objects: objects,
@@ -140,38 +140,38 @@ public sealed class EffectReader
         versionMinor = (byte)(token & 0xFF);
     }
 
-    private void ReadParameters(HlslEffectParameter[] parameters, HlslEffectObject[] objects)
+    private void ReadParameters(EffectParameter[] parameters, EffectObject[] objects)
     {
         for (var i = 0; i < parameters.Length; i++)
         {
             var typeOffset = Reader.ReadUInt32();
             var valueOffset = Reader.ReadUInt32();
             _ = Reader.ReadUInt32(); // flags
-            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
+            var annotations = new EffectAnnotation[Reader.ReadUInt32()];
 
             ReadAnnotations(annotations, objects);
             var effectValue = ReadValue(typeOffset, valueOffset, objects);
 
-            parameters[i] = new HlslEffectParameter(
+            parameters[i] = new EffectParameter(
                 Value: effectValue,
                 Annotations: annotations
             );
         }
     }
 
-    private void ReadTechniques(HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    private void ReadTechniques(EffectTechnique[] techniques, EffectObject[] objects)
     {
         for (var i = 0; i < techniques.Length; i++)
         {
             var nameOffset = Reader.ReadUInt32();
-            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
-            var passes = new HlslEffectPass[Reader.ReadUInt32()];
+            var annotations = new EffectAnnotation[Reader.ReadUInt32()];
+            var passes = new EffectPass[Reader.ReadUInt32()];
 
             var name = ReadStringAtPosition(nameOffset);
             ReadAnnotations(annotations, objects);
             ReadPasses(passes, objects);
 
-            techniques[i] = new HlslEffectTechnique(
+            techniques[i] = new EffectTechnique(
                 name,
                 passes,
                 annotations
@@ -179,7 +179,7 @@ public sealed class EffectReader
         }
     }
 
-    private void ReadAnnotations(HlslEffectAnnotation[] annotations, HlslEffectObject[] objects)
+    private void ReadAnnotations(EffectAnnotation[] annotations, EffectObject[] objects)
     {
         if (annotations.Length == 0)
         {
@@ -193,25 +193,25 @@ public sealed class EffectReader
 
             var effectValue = ReadValue(typeOffset, valueOffset, objects);
 
-            annotations[i] = new HlslEffectAnnotation(
+            annotations[i] = new EffectAnnotation(
                 Value: effectValue
             );
         }
     }
 
-    private void ReadPasses(HlslEffectPass[] passes, HlslEffectObject[] objects)
+    private void ReadPasses(EffectPass[] passes, EffectObject[] objects)
     {
         for (var i = 0; i < passes.Length; i++)
         {
             var nameOffset = Reader.ReadUInt32();
-            var annotations = new HlslEffectAnnotation[Reader.ReadUInt32()];
-            var states = new HlslEffectState[Reader.ReadUInt32()];
+            var annotations = new EffectAnnotation[Reader.ReadUInt32()];
+            var states = new EffectState[Reader.ReadUInt32()];
 
             var name = ReadStringAtPosition(nameOffset);
             ReadAnnotations(annotations, objects);
             ReadStates(states, objects);
 
-            passes[i] = new HlslEffectPass(
+            passes[i] = new EffectPass(
                 name,
                 states,
                 annotations
@@ -219,7 +219,7 @@ public sealed class EffectReader
         }
     }
 
-    private void ReadStates(HlslEffectState[] states, HlslEffectObject[] objects)
+    private void ReadStates(EffectState[] states, EffectObject[] objects)
     {
         for (var i = 0; i < states.Length; i++)
         {
@@ -228,17 +228,17 @@ public sealed class EffectReader
             var typeOffset = Reader.ReadUInt32();
             var valueOffset = Reader.ReadUInt32();
 
-            var stateType = (HlslRenderStateType)type;
+            var stateType = (RenderStateType)type;
             var effect = ReadValue(typeOffset, valueOffset, objects);
 
-            states[i] = new HlslEffectState(
+            states[i] = new EffectState(
                 stateType,
                 effect
             );
         }
     }
 
-    private void ReadSmallObjects(uint smallObjectCount, HlslEffectParameter[] parameters, HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    private void ReadSmallObjects(uint smallObjectCount, EffectParameter[] parameters, EffectTechnique[] techniques, EffectObject[] objects)
     {
         if (smallObjectCount == 0)
         {
@@ -253,37 +253,37 @@ public sealed class EffectReader
             using (KeepPos())
             {
                 var obj = objects[index];
-                if (obj.Type is HlslSymbolType.String)
+                if (obj.Type is SymbolType.String)
                 {
                     if (length > 0)
                     {
                         var value = ReadString(length);
-                        obj.Value = new HlslEffectString(value);
+                        obj.Value = new EffectString(value);
                     }
                 }
                 else if (
-                    obj.Type is HlslSymbolType.Texture
-                             or HlslSymbolType.Texture1D
-                             or HlslSymbolType.Texture2D
-                             or HlslSymbolType.Texture3D
-                             or HlslSymbolType.TextureCube
-                             or HlslSymbolType.Sampler
-                             or HlslSymbolType.Sampler1D
-                             or HlslSymbolType.Sampler2D
-                             or HlslSymbolType.Sampler3D
-                             or HlslSymbolType.SamplerCube
+                    obj.Type is SymbolType.Texture
+                             or SymbolType.Texture1D
+                             or SymbolType.Texture2D
+                             or SymbolType.Texture3D
+                             or SymbolType.TextureCube
+                             or SymbolType.Sampler
+                             or SymbolType.Sampler1D
+                             or SymbolType.Sampler2D
+                             or SymbolType.Sampler3D
+                             or SymbolType.SamplerCube
                 )
                 {
                     if (length > 0)
                     {
                         var name = ReadString(length);
-                        obj.Value = new HlslEffectSamplerMap(name);
+                        obj.Value = new EffectSamplerMap(name);
                     }
                 }
-                else if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+                else if (obj.Type is SymbolType.PixelShader or SymbolType.VertexShader)
                 {
                     var shader = Shader.Shader.ReadShader(Reader);
-                    obj.Value = new HlslEffectShader(shader);
+                    obj.Value = new EffectShader(shader);
                 }
                 else
                 {
@@ -296,7 +296,7 @@ public sealed class EffectReader
         }
     }
 
-    private void ReadLargeObjects(uint smallObjectCount, uint largeObjectCount, HlslEffectParameter[] parameters, HlslEffectTechnique[] techniques, HlslEffectObject[] objects)
+    private void ReadLargeObjects(uint smallObjectCount, uint largeObjectCount, EffectParameter[] parameters, EffectTechnique[] techniques, EffectObject[] objects)
     {
         if (largeObjectCount == 0)
         {
@@ -317,7 +317,7 @@ public sealed class EffectReader
             if (technique == -1)
             {
                 var values = parameters[index].Value.Values;
-                if (!values.TryGetArray<HlslEffectSamplerState>(out var samplerStates))
+                if (!values.TryGetArray<EffectSamplerState>(out var samplerStates))
                 {
                     throw new InvalidOperationException($"No HlslEffectSamplerState[] for LO {i} index {index} (technique: {technique}, state: {state})");
                 }
@@ -343,7 +343,7 @@ public sealed class EffectReader
             using (KeepPos())
             {
                 var obj = objects[objectIndex];
-                if (obj.Type is HlslSymbolType.PixelShader or HlslSymbolType.VertexShader)
+                if (obj.Type is SymbolType.PixelShader or SymbolType.VertexShader)
                 {
                     if (type == 2)
                     {
@@ -355,29 +355,29 @@ public sealed class EffectReader
                     else
                     {
                         var shader = Shader.Shader.ReadShader(Reader);
-                        obj.Value = new HlslEffectShader(shader);
+                        obj.Value = new EffectShader(shader);
                     }
                 }
                 else if (
-                    obj.Type is HlslSymbolType.Texture
-                             or HlslSymbolType.Texture1D
-                             or HlslSymbolType.Texture2D
-                             or HlslSymbolType.Texture3D
-                             or HlslSymbolType.TextureCube
-                             or HlslSymbolType.Sampler
-                             or HlslSymbolType.Sampler1D
-                             or HlslSymbolType.Sampler2D
-                             or HlslSymbolType.Sampler3D
-                             or HlslSymbolType.SamplerCube
+                    obj.Type is SymbolType.Texture
+                             or SymbolType.Texture1D
+                             or SymbolType.Texture2D
+                             or SymbolType.Texture3D
+                             or SymbolType.TextureCube
+                             or SymbolType.Sampler
+                             or SymbolType.Sampler1D
+                             or SymbolType.Sampler2D
+                             or SymbolType.Sampler3D
+                             or SymbolType.SamplerCube
                 )
                 {
                     if (length > 0)
                     {
                         var name = ReadString(length);
-                        obj.Value = new HlslEffectSamplerMap(name);
+                        obj.Value = new EffectSamplerMap(name);
                     }
                 }
-                else if (obj.Type is not HlslSymbolType.Void) // TODO: why?
+                else if (obj.Type is not SymbolType.Void) // TODO: why?
                 {
                     throw new InvalidOperationException($"Unknown large object type: {obj.Type}");
                 }
@@ -388,10 +388,10 @@ public sealed class EffectReader
         }
     }
 
-    private HlslEffectValue ReadValue(
+    private EffectValue ReadValue(
         uint typeOffset,
         uint valueOffset,
-        HlslEffectObject[] objects
+        EffectObject[] objects
     )
     {
         using (KeepPos())
@@ -404,21 +404,21 @@ public sealed class EffectReader
             var semanticOffset = Reader.ReadUInt32();
             var elementCount = Reader.ReadUInt32();
 
-            var parameterType = (HlslSymbolType)type;
-            var parameterClass = (HlslSymbolClass)valueClass;
+            var parameterType = (SymbolType)type;
+            var parameterClass = (SymbolClass)valueClass;
             var name = ReadStringAtPosition(nameOffset);
             var semantic = ReadStringAtPosition(semanticOffset);
 
-            Debug.Assert(parameterClass is >= HlslSymbolClass.Scalar and <= HlslSymbolClass.Struct);
+            Debug.Assert(parameterClass is >= SymbolClass.Scalar and <= SymbolClass.Struct);
 
             if (
-                parameterClass is HlslSymbolClass.Scalar
-                               or HlslSymbolClass.Vector
-                               or HlslSymbolClass.MatrixRows
-                               or HlslSymbolClass.MatrixColumns
+                parameterClass is SymbolClass.Scalar
+                               or SymbolClass.Vector
+                               or SymbolClass.MatrixRows
+                               or SymbolClass.MatrixColumns
             )
             {
-                Debug.Assert(parameterType is >= HlslSymbolType.Bool and <= HlslSymbolType.Float);
+                Debug.Assert(parameterType is >= SymbolType.Bool and <= SymbolType.Float);
 
                 var columnCount = Reader.ReadUInt32();
                 var rowCount = Reader.ReadUInt32();
@@ -434,7 +434,7 @@ public sealed class EffectReader
                 ValuesUnion values;
                 switch (parameterType)
                 {
-                    case HlslSymbolType.Int:
+                    case SymbolType.Int:
                         var ints = new int[valueCount];
                         for (var i = 0; i < ints.Length; i++)
                         {
@@ -444,7 +444,7 @@ public sealed class EffectReader
                         values = ValuesUnion.FromArray(ints);
                         break;
 
-                    case HlslSymbolType.Float:
+                    case SymbolType.Float:
                         var floats = new float[valueCount];
                         for (var i = 0; i < floats.Length; i++)
                         {
@@ -454,7 +454,7 @@ public sealed class EffectReader
                         values = ValuesUnion.FromArray(floats);
                         break;
 
-                    case HlslSymbolType.Bool:
+                    case SymbolType.Bool:
                         var booleans = new bool[valueCount];
                         for (var i = 0; i < booleans.Length; i++)
                         {
@@ -468,10 +468,10 @@ public sealed class EffectReader
                         throw new InvalidOperationException($"Cannot read value of scalar: {parameterType}");
                 }
 
-                return new HlslEffectValue(
+                return new EffectValue(
                     name,
                     semantic,
-                    new HlslSymbolTypeInfo(
+                    new SymbolTypeInfo(
                         parameterClass,
                         parameterType,
                         rowCount,
@@ -483,36 +483,36 @@ public sealed class EffectReader
                 );
             }
 
-            if (parameterClass is HlslSymbolClass.Object)
+            if (parameterClass is SymbolClass.Object)
             {
-                Debug.Assert(parameterType is >= HlslSymbolType.String and <= HlslSymbolType.VertexShader);
+                Debug.Assert(parameterType is >= SymbolType.String and <= SymbolType.VertexShader);
 
                 SeekFromOffset(valueOffset);
 
                 if (
-                    parameterType is HlslSymbolType.Sampler
-                                  or HlslSymbolType.Sampler1D
-                                  or HlslSymbolType.Sampler2D
-                                  or HlslSymbolType.Sampler3D
-                                  or HlslSymbolType.SamplerCube
+                    parameterType is SymbolType.Sampler
+                                  or SymbolType.Sampler1D
+                                  or SymbolType.Sampler2D
+                                  or SymbolType.Sampler3D
+                                  or SymbolType.SamplerCube
                 )
                 {
-                    var states = new HlslEffectSamplerState[Reader.ReadUInt32()];
+                    var states = new EffectSamplerState[Reader.ReadUInt32()];
                     for (var i = 0; i < states.Length; i++)
                     {
-                        var samplerType = (HlslSamplerStateType)(Reader.ReadUInt32() & ~0xA0);
+                        var samplerType = (SamplerStateType)(Reader.ReadUInt32() & ~0xA0);
                         _ = Reader.ReadUInt32(); // FIXME
                         var stateTypeOffset = Reader.ReadUInt32();
                         var stateValueOffset = Reader.ReadUInt32();
 
                         var stateValue = ReadValue(stateTypeOffset, stateValueOffset, objects);
 
-                        states[i] = new HlslEffectSamplerState(
+                        states[i] = new EffectSamplerState(
                             Type: samplerType,
                             Value: stateValue
                         );
 
-                        if (samplerType == HlslSamplerStateType.Texture)
+                        if (samplerType == SamplerStateType.Texture)
                         {
                             if (!stateValue.Values.TryGetArray<int>(out var ints))
                             {
@@ -523,10 +523,10 @@ public sealed class EffectReader
                         }
                     }
 
-                    return new HlslEffectValue(
+                    return new EffectValue(
                         name,
                         semantic,
-                        new HlslSymbolTypeInfo(
+                        new SymbolTypeInfo(
                             parameterClass,
                             parameterType,
                             0,
@@ -559,10 +559,10 @@ public sealed class EffectReader
                         objects[ints[i]].Type = parameterType;
                     }
 
-                    return new HlslEffectValue(
+                    return new EffectValue(
                         name,
                         semantic,
-                        new HlslSymbolTypeInfo(
+                        new SymbolTypeInfo(
                             parameterClass,
                             parameterType,
                             0,
@@ -575,15 +575,15 @@ public sealed class EffectReader
                 }
             }
 
-            if (parameterClass is HlslSymbolClass.Struct)
+            if (parameterClass is SymbolClass.Struct)
             {
-                var members = new HlslSymbolStructMember[Reader.ReadUInt32()];
+                var members = new SymbolStructMember[Reader.ReadUInt32()];
 
                 var structSize = 0u;
                 for (var i = 0; i < members.Length; i++)
                 {
-                    var memberParameterType = (HlslSymbolType)Reader.ReadUInt32();
-                    var memberParameterClass = (HlslSymbolClass)Reader.ReadUInt32();
+                    var memberParameterType = (SymbolType)Reader.ReadUInt32();
+                    var memberParameterClass = (SymbolClass)Reader.ReadUInt32();
 
                     var memberNameOffset = Reader.ReadUInt32();
                     _ = Reader.ReadUInt32(); // memberSemanticOffset
@@ -595,8 +595,8 @@ public sealed class EffectReader
                     var memberRowCount = Reader.ReadUInt32();
 
                     // TODO: nested structs
-                    Debug.Assert(memberParameterClass is >= HlslSymbolClass.Scalar and <= HlslSymbolClass.MatrixColumns);
-                    Debug.Assert(memberParameterType is >= HlslSymbolType.Bool and <= HlslSymbolType.Float);
+                    Debug.Assert(memberParameterClass is >= SymbolClass.Scalar and <= SymbolClass.MatrixColumns);
+                    Debug.Assert(memberParameterType is >= SymbolType.Bool and <= SymbolType.Float);
 
                     var memSize = 4 * memberRowCount;
                     if (memberElementCount > 0)
@@ -606,9 +606,9 @@ public sealed class EffectReader
 
                     structSize += memSize;
 
-                    members[i] = new HlslSymbolStructMember(
+                    members[i] = new SymbolStructMember(
                         memberName,
-                        new HlslSymbolTypeInfo(
+                        new SymbolTypeInfo(
                             memberParameterClass,
                             memberParameterType,
                             memberRowCount,
@@ -648,10 +648,10 @@ public sealed class EffectReader
                 }
                 while (++ii < elementCount);
 
-                return new HlslEffectValue(
+                return new EffectValue(
                     name,
                     semantic,
-                    new HlslSymbolTypeInfo(
+                    new SymbolTypeInfo(
                         parameterClass,
                         parameterType,
                         row_count,

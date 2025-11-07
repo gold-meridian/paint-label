@@ -19,7 +19,7 @@ public abstract class BaseShader<TKind>
 
     public List<OpcodeData<TKind>> Opcodes { get; } = [];
 
-    public Dictionary<uint, HlslSymbolTypeInfo> Types { get; } = [];
+    public Dictionary<uint, SymbolTypeInfo> Types { get; } = [];
 
     public string? Creator { get; private set; }
 
@@ -100,7 +100,7 @@ public abstract class BaseShader<TKind>
             var constant = new Constant
             {
                 Name = ReadString(reader, start, length),
-                RegSet = (HlslSymbolRegisterSet)reader.ReadUInt16(),
+                RegSet = (SymbolRegisterSet)reader.ReadUInt16(),
                 RegIndex = reader.ReadUInt16(),
                 RegCount = reader.ReadUInt16(),
             };
@@ -173,7 +173,7 @@ public abstract class BaseShader<TKind>
         }
     }
 
-    protected HlslSymbolTypeInfo ReadTypeInfo(BinaryReader reader, uint start, uint length)
+    protected SymbolTypeInfo ReadTypeInfo(BinaryReader reader, uint start, uint length)
     {
         var position = reader.ReadUInt32();
 
@@ -188,13 +188,13 @@ public abstract class BaseShader<TKind>
         {
             reader.BaseStream.Seek(start + position, SeekOrigin.Begin);
 
-            var info = new HlslSymbolTypeInfo(
-                ParameterClass: (HlslSymbolClass)reader.ReadUInt16(),
-                ParameterType: (HlslSymbolType)reader.ReadUInt16(),
+            var info = new SymbolTypeInfo(
+                ParameterClass: (SymbolClass)reader.ReadUInt16(),
+                ParameterType: (SymbolType)reader.ReadUInt16(),
                 Rows: reader.ReadUInt16(),
                 Columns: reader.ReadUInt16(),
                 Elements: reader.ReadUInt16(),
-                Members: new HlslSymbolStructMember[reader.ReadUInt16()]
+                Members: new SymbolStructMember[reader.ReadUInt16()]
             );
 
             if (info.Members.Length > 0)
@@ -204,7 +204,7 @@ public abstract class BaseShader<TKind>
 
                 for (var i = 0; i < info.Members.Length; i++)
                 {
-                    info.Members[i] = new HlslSymbolStructMember(
+                    info.Members[i] = new SymbolStructMember(
                         Name: ReadString(reader, start, length),
                         Info: ReadTypeInfo(reader, start, length)
                     );
