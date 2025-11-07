@@ -18,26 +18,6 @@ public sealed class EffectReader
         }
     }
 
-    private static readonly Effect error_unexpected_eof = new(
-        Parameters: [],
-        Techniques: [],
-        Objects: [],
-        Errors:
-        [
-            new Error("Unexpected EOF", null, ErrorLocation.NONE),
-        ]
-    );
-
-    private static readonly Effect error_not_an_effect = new(
-        Parameters: [],
-        Techniques: [],
-        Objects: [],
-        Errors:
-        [
-            new Error("Not an Effects Framework binary", null, ErrorLocation.NONE),
-        ]
-    );
-
     public int Position
     {
         get => (int)Reader.BaseStream.Position;
@@ -50,7 +30,6 @@ public sealed class EffectReader
     public BinaryReader Reader { get; }
 
     private int baseOffset;
-    private List<Error> errors = [];
 
     private EffectReader(BinaryReader reader)
     {
@@ -67,7 +46,7 @@ public sealed class EffectReader
     {
         if (Length < 8)
         {
-            return error_unexpected_eof;
+            throw new EndOfStreamException();
         }
 
         ReadVersionToken(out var magic, out var major, out var minor);
@@ -83,21 +62,21 @@ public sealed class EffectReader
 
         if (!(magic == 0xFEFF && major == 0x09 && minor == 0x01))
         {
-            return error_not_an_effect;
+            throw new InvalidDataException("Not an Effects Framework binary");
         }
 
         var offset = Reader.ReadUInt32();
         baseOffset = Position;
         if (offset > Length)
         {
-            return error_unexpected_eof;
+            throw new EndOfStreamException();
         }
 
         Position += (int)offset;
 
         if (Length < 16)
         {
-            return error_unexpected_eof;
+            throw new EndOfStreamException();
         }
 
         var parameters = new EffectParameter[Reader.ReadUInt32()];
@@ -114,7 +93,7 @@ public sealed class EffectReader
 
         if (Length < 8)
         {
-            return error_unexpected_eof;
+            throw new EndOfStreamException();
         }
 
         var smallObjectCount = Reader.ReadUInt32();
@@ -126,8 +105,7 @@ public sealed class EffectReader
         return new Effect(
             Parameters: parameters,
             Techniques: techniques,
-            Objects: objects,
-            Errors: errors.ToArray()
+            Objects: objects
         );
     }
 
